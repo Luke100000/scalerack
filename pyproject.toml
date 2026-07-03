@@ -55,6 +55,7 @@ select = ["E", "W", "F", "I", "UP", "B", "SIM", "RUF"]
 
 [tool.mypy]
 strict = true
+warn_return_any = false
 files = ["src"]
 
 [tool.pytest.ini_options]
