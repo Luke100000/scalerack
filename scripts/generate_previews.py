@@ -11,6 +11,7 @@ from pathlib import Path
 from PIL import Image
 
 import scalerack
+from scalerack.exceptions import InvalidFactorError
 
 DOCS_DIRECTORY = Path(__file__).resolve().parent.parent / "docs"
 SAMPLES_DIRECTORY = DOCS_DIRECTORY / "samples"
@@ -32,6 +33,9 @@ class PreviewTask:
 
 PREVIEW_TASKS = (
     PreviewTask("photo", SAMPLES_DIRECTORY / "photo_downscale.jpg", DOWNSCALE_FACTOR, "downscale"),
+    PreviewTask(
+        "sprite", SAMPLES_DIRECTORY / "sprite_downscale.png", DOWNSCALE_FACTOR, "downscale"
+    ),
     PreviewTask(
         "photo",
         SAMPLES_DIRECTORY / "photo_upscale.jpg",
@@ -91,13 +95,16 @@ def generate_algorithm_previews() -> None:
                 continue
 
             source = prepare_input(task)
-            result = (
-                scalerack.resize(name, source, task.factor)
-                if has_factor
-                else scalerack.resize(name, source)
-            )
+            try:
+                result = (
+                    scalerack.resize(name, source, task.factor)
+                    if has_factor
+                    else scalerack.resize(name, source)
+                )
+            except InvalidFactorError:
+                continue
             direction = classify_resize(source, result)
-            if direction is None or (task.name == "sprite" and direction == "downscale"):
+            if direction is None:
                 continue
             save_preview(result, PREVIEWS_DIRECTORY / f"{name}_{direction}_{task.name}.png")
 

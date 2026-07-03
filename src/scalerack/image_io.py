@@ -13,7 +13,6 @@ ImageT = TypeVar("ImageT")
 
 SUPPORTED_ARRAY_DTYPES = frozenset({"uint8", "float32", "float64"})
 SUPPORTED_CHANNEL_COUNTS = frozenset({3, 4})
-UINT8_MAX = 255
 
 
 def is_pil_image(image: object) -> bool:
@@ -74,8 +73,15 @@ def from_array(result: np.ndarray, original: object) -> Any:
     return result
 
 
+def remove_alpha_channel(array: np.ndarray) -> np.ndarray:
+    """Return visible color channels only, preserving grayscale and RGB inputs."""
+    if array.ndim == 3 and array.shape[2] == 4:
+        return np.ascontiguousarray(array[:, :, :3])
+    return array
+
+
 def restore_dtype(values: np.ndarray, dtype: np.dtype[Any]) -> np.ndarray:
     """Cast float computation results back to the input dtype (clip and round for uint8)."""
     if dtype == np.uint8:
-        return np.clip(np.rint(values), 0, UINT8_MAX).astype(np.uint8)
+        return np.clip(np.rint(values), 0, 255).astype(np.uint8)
     return values.astype(dtype, copy=False)

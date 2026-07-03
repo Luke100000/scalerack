@@ -6,6 +6,7 @@ from scalerack.algorithms.bicubic import bicubic
 from scalerack.algorithms.bilinear import bilinear
 from scalerack.algorithms.box import box
 from scalerack.algorithms.catmull_rom import catmull_rom
+from scalerack.algorithms.content_adaptive_downscale import content_adaptive_downscale
 from scalerack.algorithms.epx import scale2x, scale3x, scale4x
 from scalerack.algorithms.lanczos import lanczos
 from scalerack.algorithms.magic_kernel_sharp import magic_kernel_sharp
@@ -33,6 +34,7 @@ __all__ = [
     "bilinear",
     "box",
     "catmull_rom",
+    "content_adaptive_downscale",
     "lanczos",
     "magic_kernel_sharp",
     "mitchell",

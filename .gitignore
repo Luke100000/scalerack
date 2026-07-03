@@ -25,6 +25,7 @@ Thumbs.db
 
 # Local agent/tool state
 .claude/
+.agents/
 .serena/
 .specify/
 

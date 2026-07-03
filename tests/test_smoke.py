@@ -7,7 +7,12 @@ import pytest
 import scalerack
 
 CLASSICAL_SMOKE_FACTOR = 1.7
-FIXED_FACTORS = {"scale2x": 2.0, "scale3x": 3.0, "scale4x": 4.0}
+SMOKE_FACTORS = {
+    "content_adaptive_downscale": 0.5,
+    "scale2x": 2.0,
+    "scale3x": 3.0,
+    "scale4x": 4.0,
+}
 PILLOW_INSTALLED = importlib.util.find_spec("PIL") is not None
 
 
@@ -19,13 +24,14 @@ class TestScalerSmoke:
         self, name: str, complex_image: np.ndarray
     ) -> None:
         """Each algorithm returns a same-dtype ndarray of the expected size."""
-        factor = FIXED_FACTORS.get(name, CLASSICAL_SMOKE_FACTOR)
+        factor = SMOKE_FACTORS.get(name, CLASSICAL_SMOKE_FACTOR)
         result = scalerack.resize(name, complex_image, factor)
         assert isinstance(result, np.ndarray)
         assert result.dtype == complex_image.dtype
         expected_height = round(complex_image.shape[0] * factor)
         expected_width = round(complex_image.shape[1] * factor)
-        assert result.shape == (expected_height, expected_width, complex_image.shape[2])
+        expected_channels = 3 if name == "content_adaptive_downscale" else complex_image.shape[2]
+        assert result.shape == (expected_height, expected_width, expected_channels)
 
     @pytest.mark.skipif(not PILLOW_INSTALLED, reason="Pillow not installed")
     def test_pil_image_round_trips(self, complex_image: np.ndarray) -> None:
