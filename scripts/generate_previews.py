@@ -3,10 +3,12 @@
 Run from the repository root: ``python scripts/generate_previews.py``
 """
 
+import inspect
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image
 
 import scalerack
 
@@ -14,64 +16,102 @@ DOCS_DIRECTORY = Path(__file__).resolve().parent.parent / "docs"
 SAMPLES_DIRECTORY = DOCS_DIRECTORY / "samples"
 PREVIEWS_DIRECTORY = DOCS_DIRECTORY / "previews"
 
-DEFAULT_PREVIEW_FACTOR = 2
-FIXED_PREVIEW_FACTORS = {"scale2x": 2, "scale3x": 3, "scale4x": 4}
-
-LABEL_BAR_HEIGHT = 22
-LABEL_MARGIN = 4
-GUTTER = 6
-BACKGROUND = (248, 248, 248, 255)
-LABEL_COLOR = (20, 20, 20, 255)
+DOWNSCALE_FACTOR = 0.25
+UPSCALE_FACTOR = 4
+RECONSTRUCTION_DOWNSCALER = "lanczos"
 
 
-def load_label_font() -> ImageFont.ImageFont | ImageFont.FreeTypeFont:
-    try:
-        return ImageFont.load_default(size=13)
-    except TypeError:  # older Pillow without the size parameter
-        return ImageFont.load_default()
+@dataclass(frozen=True)
+class PreviewTask:
+    name: str
+    path: Path
+    factor: float
+    original_direction: str
+    reconstruct_from_downscale: bool = False
 
 
-def compose_comparison(reference: Image.Image, result: Image.Image, title: str) -> Image.Image:
-    """Side-by-side sheet: nearest-scaled original on the left, algorithm output right."""
-    font = load_label_font()
-    reference_label = "nearest (reference)"
-    probe = ImageDraw.Draw(Image.new("RGBA", (1, 1)))
-    label_width = 2 * LABEL_MARGIN + max(
-        int(probe.textlength(reference_label, font)), int(probe.textlength(title, font))
-    )
-    column_width = max(reference.width, result.width, label_width)
-    width = 2 * column_width + 3 * GUTTER
-    height = max(reference.height, result.height) + LABEL_BAR_HEIGHT + 2 * GUTTER
-    sheet = Image.new("RGBA", (width, height), BACKGROUND)
-    left_column = GUTTER
-    right_column = column_width + 2 * GUTTER
-    sheet.paste(reference, (left_column, LABEL_BAR_HEIGHT + GUTTER), mask=reference)
-    sheet.paste(result, (right_column, LABEL_BAR_HEIGHT + GUTTER), mask=result)
-    draw = ImageDraw.Draw(sheet)
-    draw.text((left_column + LABEL_MARGIN, LABEL_MARGIN), reference_label, LABEL_COLOR, font)
-    draw.text((right_column + LABEL_MARGIN, LABEL_MARGIN), title, LABEL_COLOR, font)
-    return sheet
+PREVIEW_TASKS = (
+    PreviewTask("photo", SAMPLES_DIRECTORY / "photo_downscale.jpg", DOWNSCALE_FACTOR, "downscale"),
+    PreviewTask(
+        "photo",
+        SAMPLES_DIRECTORY / "photo_upscale.jpg",
+        UPSCALE_FACTOR,
+        "upscale",
+        reconstruct_from_downscale=True,
+    ),
+    PreviewTask("sprite", SAMPLES_DIRECTORY / "sprite_upscale.png", UPSCALE_FACTOR, "upscale"),
+)
+
+
+def accepts_factor(name: str) -> bool:
+    parameters = inspect.signature(scalerack.ALGORITHMS[name]).parameters
+    return "factor" in parameters
+
+
+def open_sample(task: PreviewTask) -> Image.Image:
+    with Image.open(task.path) as image:
+        return image.convert("RGBA")
+
+
+def prepare_input(task: PreviewTask) -> Image.Image:
+    source = open_sample(task)
+    if task.reconstruct_from_downscale:
+        return scalerack.resize(RECONSTRUCTION_DOWNSCALER, source, DOWNSCALE_FACTOR)
+    return source
+
+
+def classify_resize(source: Image.Image, result: Image.Image) -> str | None:
+    source_pixels = source.width * source.height
+    result_pixels = result.width * result.height
+    if result_pixels > source_pixels:
+        return "upscale"
+    if result_pixels < source_pixels:
+        return "downscale"
+    return None
+
+
+def save_preview(image: Image.Image, path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    image.save(path)
+    print(f"wrote {path.relative_to(DOCS_DIRECTORY.parent)}")
+
+
+def generate_originals() -> None:
+    for task in PREVIEW_TASKS:
+        source = open_sample(task)
+        output_path = PREVIEWS_DIRECTORY / f"original_{task.original_direction}_{task.name}.png"
+        save_preview(source, output_path)
+
+
+def generate_algorithm_previews() -> None:
+    for name in scalerack.ALGORITHMS:
+        has_factor = accepts_factor(name)
+        for task in PREVIEW_TASKS:
+            if not has_factor and task.factor < 1:
+                continue
+
+            source = prepare_input(task)
+            result = (
+                scalerack.resize(name, source, task.factor)
+                if has_factor
+                else scalerack.resize(name, source)
+            )
+            direction = classify_resize(source, result)
+            if direction is None or (task.name == "sprite" and direction == "downscale"):
+                continue
+            save_preview(result, PREVIEWS_DIRECTORY / f"{name}_{direction}_{task.name}.png")
 
 
 def main() -> int:
-    PREVIEWS_DIRECTORY.mkdir(parents=True, exist_ok=True)
-    samples = {
-        path.stem: Image.open(path).convert("RGBA")
-        for path in sorted(SAMPLES_DIRECTORY.glob("*.png"))
-    }
-    if not samples:
-        print(f"no samples found in {SAMPLES_DIRECTORY}; run scripts/make_samples.py first")
+    missing_samples = [task.path for task in PREVIEW_TASKS if not task.path.exists()]
+    if missing_samples:
+        print("missing preview samples:")
+        for path in missing_samples:
+            print(f"  {path.relative_to(DOCS_DIRECTORY.parent)}")
         return 1
 
-    for name in scalerack.ALGORITHMS:
-        factor = FIXED_PREVIEW_FACTORS.get(name, DEFAULT_PREVIEW_FACTOR)
-        for sample_name, source in samples.items():
-            result = scalerack.resize(name, source, factor)
-            reference = scalerack.nearest(source, factor)
-            sheet = compose_comparison(reference, result, f"{name} ({factor}x)")
-            output_path = PREVIEWS_DIRECTORY / f"{name}_{sample_name}.png"
-            sheet.save(output_path)
-            print(f"wrote {output_path.relative_to(DOCS_DIRECTORY.parent)}")
+    generate_originals()
+    generate_algorithm_previews()
 
     print(f"previews complete for {len(scalerack.ALGORITHMS)} algorithms")
     return 0

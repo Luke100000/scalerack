@@ -47,24 +47,36 @@ Check the code documentation for algorithm details.
 
 ### Classical resamplers
 
-| Algorithm            | Photo                                                              | Sprite                                                              |
-|----------------------|--------------------------------------------------------------------|---------------------------------------------------------------------|
-| `nearest`            | <img src="docs/previews/nearest_photo.png" width="320">            | <img src="docs/previews/nearest_sprite.png" width="200">            |
-| `box`                | <img src="docs/previews/box_photo.png" width="320">                | <img src="docs/previews/box_sprite.png" width="200">                |
-| `bilinear`           | <img src="docs/previews/bilinear_photo.png" width="320">           | <img src="docs/previews/bilinear_sprite.png" width="200">           |
-| `bicubic`            | <img src="docs/previews/bicubic_photo.png" width="320">            | <img src="docs/previews/bicubic_sprite.png" width="200">            |
-| `mitchell`           | <img src="docs/previews/mitchell_photo.png" width="320">           | <img src="docs/previews/mitchell_sprite.png" width="200">           |
-| `catmull_rom`        | <img src="docs/previews/catmull_rom_photo.png" width="320">        | <img src="docs/previews/catmull_rom_sprite.png" width="200">        |
-| `lanczos`            | <img src="docs/previews/lanczos_photo.png" width="320">            | <img src="docs/previews/lanczos_sprite.png" width="200">            |
-| `magic_kernel_sharp` | <img src="docs/previews/magic_kernel_sharp_photo.png" width="320"> | <img src="docs/previews/magic_kernel_sharp_sprite.png" width="200"> |
+Downscale previews are generated as 4x reductions (0.25x output size). Photo reconstruction previews
+first degrade the source with Lanczos at 0.25x, then upscale the degraded image back toward the
+original size. Sprite upscale previews enlarge the pixel-art source directly.
+
+| Algorithm            | Photo downscale                                                              | Photo reconstruction                                                       | Sprite upscale                                                                                                  |
+|----------------------|------------------------------------------------------------------------------|----------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------|
+| Original             | <img src="docs/previews/original_downscale_photo.png" width="160">           | <img src="docs/previews/original_upscale_photo.png" width="160">           | <img src="docs/previews/original_upscale_sprite.png" width="48" style="image-rendering: pixelated;">            |
+| `nearest`            | <img src="docs/previews/nearest_downscale_photo.png" width="160">            | <img src="docs/previews/nearest_upscale_photo.png" width="160">            | <img src="docs/previews/nearest_upscale_sprite.png" width="192" style="image-rendering: pixelated;">            |
+| `box`                | <img src="docs/previews/box_downscale_photo.png" width="160">                | <img src="docs/previews/box_upscale_photo.png" width="160">                | <img src="docs/previews/box_upscale_sprite.png" width="192" style="image-rendering: pixelated;">                |
+| `bilinear`           | <img src="docs/previews/bilinear_downscale_photo.png" width="160">           | <img src="docs/previews/bilinear_upscale_photo.png" width="160">           | <img src="docs/previews/bilinear_upscale_sprite.png" width="192" style="image-rendering: pixelated;">           |
+| `bicubic`            | <img src="docs/previews/bicubic_downscale_photo.png" width="160">            | <img src="docs/previews/bicubic_upscale_photo.png" width="160">            | <img src="docs/previews/bicubic_upscale_sprite.png" width="192" style="image-rendering: pixelated;">            |
+| `mitchell`           | <img src="docs/previews/mitchell_downscale_photo.png" width="160">           | <img src="docs/previews/mitchell_upscale_photo.png" width="160">           | <img src="docs/previews/mitchell_upscale_sprite.png" width="192" style="image-rendering: pixelated;">           |
+| `catmull_rom`        | <img src="docs/previews/catmull_rom_downscale_photo.png" width="160">        | <img src="docs/previews/catmull_rom_upscale_photo.png" width="160">        | <img src="docs/previews/catmull_rom_upscale_sprite.png" width="192" style="image-rendering: pixelated;">        |
+| `lanczos`            | <img src="docs/previews/lanczos_downscale_photo.png" width="160">            | <img src="docs/previews/lanczos_upscale_photo.png" width="160">            | <img src="docs/previews/lanczos_upscale_sprite.png" width="192" style="image-rendering: pixelated;">            |
+| `magic_kernel_sharp` | <img src="docs/previews/magic_kernel_sharp_downscale_photo.png" width="160"> | <img src="docs/previews/magic_kernel_sharp_upscale_photo.png" width="160"> | <img src="docs/previews/magic_kernel_sharp_upscale_sprite.png" width="192" style="image-rendering: pixelated;"> |
 
 ### Pixel-art scalers
 
-| Algorithm | Photo                                                   | Sprite                                                   |
-|-----------|---------------------------------------------------------|----------------------------------------------------------|
-| `scale2x` | <img src="docs/previews/scale2x_photo.png" width="320"> | <img src="docs/previews/scale2x_sprite.png" width="200"> |
-| `scale3x` | <img src="docs/previews/scale3x_photo.png" width="320"> | <img src="docs/previews/scale3x_sprite.png" width="200"> |
-| `scale4x` | <img src="docs/previews/scale4x_photo.png" width="320"> | <img src="docs/previews/scale4x_sprite.png" width="200"> |
+Some algorithms may output different results depending on the fixed scale factor.
+
+| Algorithm | Photo reconstruction                                             | Sprite upscale                                                                                       |
+|-----------|------------------------------------------------------------------|------------------------------------------------------------------------------------------------------|
+| Original  | <img src="docs/previews/original_upscale_photo.png" width="160"> | <img src="docs/previews/original_upscale_sprite.png" width="48" style="image-rendering: pixelated;"> |
+| `scale2x` | <img src="docs/previews/scale2x_upscale_photo.png" width="160">  | <img src="docs/previews/scale2x_upscale_sprite.png" width="96" style="image-rendering: pixelated;">  |
+| `scale3x` | <img src="docs/previews/scale3x_upscale_photo.png" width="160">  | <img src="docs/previews/scale3x_upscale_sprite.png" width="144" style="image-rendering: pixelated;"> |
+| `scale4x` | <img src="docs/previews/scale4x_upscale_photo.png" width="160">  | <img src="docs/previews/scale4x_upscale_sprite.png" width="192" style="image-rendering: pixelated;"> |
+
+Sources: [Münster market](https://commons.wikimedia.org/wiki/File:M%C3%BCnster,_Wochenmarkt_--_2017_--_2333.jpg),
+[macaw](https://commons.wikimedia.org/wiki/File%3AMacaw_parrot_%28Unsplash%29.jpg),
+and [Pixelart TV](https://commons.wikimedia.org/wiki/File:Pixelart-tv-iso.png), via Wikimedia Commons.
 
 ## Roadmap
 
