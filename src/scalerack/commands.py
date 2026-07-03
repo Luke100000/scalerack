@@ -9,7 +9,7 @@ from scalerack.constants import SUPPORTED_PIL_MODES
 app = cyclopts.App(
     name="scalerack",
     version=scalerack.__version__,
-    result_action=lambda result: result,
+    result_action="return_value",
 )
 
 OptionValue = int | float | str

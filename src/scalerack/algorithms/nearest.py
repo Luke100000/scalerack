@@ -2,10 +2,12 @@ from typing import cast
 
 import numpy as np
 
+from scalerack.algorithms.registry import register
 from scalerack.image_io import ImageT, from_array, to_array
 from scalerack.validation import resolve_output_size
 
 
+@register
 def nearest(
     image: ImageT,
     factor: float | None = None,

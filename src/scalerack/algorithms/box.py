@@ -1,9 +1,11 @@
 import numpy as np
 
+from scalerack.algorithms.registry import register
 from scalerack.image_io import ImageT
 from scalerack.resample import filter_axis, normalize_rows, run_pipeline
 
 
+@register
 def box(
     image: ImageT,
     factor: float | None = None,

@@ -1,5 +1,4 @@
 import inspect
-from collections.abc import Callable
 from importlib import metadata
 from typing import Any, cast
 
@@ -12,6 +11,7 @@ from scalerack.algorithms.lanczos import lanczos
 from scalerack.algorithms.magic_kernel_sharp import magic_kernel_sharp
 from scalerack.algorithms.mitchell import mitchell
 from scalerack.algorithms.nearest import nearest
+from scalerack.algorithms.registry import ALGORITHMS
 from scalerack.exceptions import (
     InvalidFactorError,
     ScalerackError,
@@ -43,23 +43,6 @@ __all__ = [
     "scale4x",
 ]
 
-ALGORITHMS: dict[str, Callable[..., Any]] = {
-    function.__name__: function
-    for function in (
-        nearest,
-        box,
-        bilinear,
-        bicubic,
-        mitchell,
-        catmull_rom,
-        lanczos,
-        magic_kernel_sharp,
-        scale2x,
-        scale3x,
-        scale4x,
-    )
-}
-
 try:
     __version__ = metadata.version("scalerack")
 except metadata.PackageNotFoundError:
@@ -67,13 +50,13 @@ except metadata.PackageNotFoundError:
 
 
 def resize(
-        method: str,
-        image: ImageT,
-        factor: float | None = None,
-        *,
-        width: int | None = None,
-        height: int | None = None,
-        **opts: Any,
+    method: str,
+    image: ImageT,
+    factor: float | None = None,
+    *,
+    width: int | None = None,
+    height: int | None = None,
+    **opts: Any,
 ) -> ImageT:
     """Scale an image with the algorithm named by ``method``.
 

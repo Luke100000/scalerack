@@ -1,8 +1,10 @@
+from scalerack.algorithms.registry import register
 from scalerack.image_io import ImageT
 from scalerack.kernels import make_triangle_kernel
 from scalerack.resample import resample_with_kernel
 
 
+@register
 def bilinear(
     image: ImageT,
     factor: float | None = None,

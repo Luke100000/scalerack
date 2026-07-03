@@ -1,8 +1,10 @@
+from scalerack.algorithms.registry import register
 from scalerack.image_io import ImageT
 from scalerack.kernels import make_magic_kernel_sharp
 from scalerack.resample import resample_with_kernel
 
 
+@register
 def magic_kernel_sharp(
     image: ImageT,
     factor: float | None = None,

@@ -3,12 +3,14 @@ from typing import cast
 
 import numpy as np
 
+from scalerack.algorithms.registry import register
 from scalerack.image_io import ImageT, from_array, to_array
 from scalerack.resample import drop_channel_axis, ensure_channel_axis
 
 ExpandFunction = Callable[[np.ndarray], np.ndarray]
 
 
+@register
 def scale2x(image: ImageT) -> ImageT:
     """Enlarge pixel art exactly 2x with the Scale2x (EPX) neighborhood rules.
 
@@ -18,11 +20,13 @@ def scale2x(image: ImageT) -> ImageT:
     return run_epx(image, expand_scale2x)
 
 
+@register
 def scale3x(image: ImageT) -> ImageT:
     """Enlarge pixel art exactly 3x with the Scale3x neighborhood rules."""
     return run_epx(image, expand_scale3x)
 
 
+@register
 def scale4x(image: ImageT) -> ImageT:
     """Enlarge pixel art exactly 4x by applying Scale2x twice."""
     return run_epx(image, expand_scale4x)
