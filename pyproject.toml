@@ -29,6 +29,7 @@ classifiers = [
 Homepage = "https://github.com/Luke100000/scalerack"
 Repository = "https://github.com/Luke100000/scalerack"
 Issues = "https://github.com/Luke100000/scalerack/issues"
+PyPI = "https://pypi.org/project/scalerack/"
 
 [project.optional-dependencies]
 cli = ["pillow>=10", "cyclopts>=3"]

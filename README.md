@@ -1,5 +1,7 @@
 # Scalerack
 
+[![PyPI version](https://img.shields.io/pypi/v/scalerack.svg)](https://pypi.org/project/scalerack/)
+
 Many image up- and downscaling algorithms behind one unified interface: classical kernel resampling, edge-aware
 reconstruction for crisp low-resolution art, vectorizing and perceptual downscaling approaches. Whatever goes in
 comes back out in the same format:
@@ -8,6 +10,8 @@ comes back out in the same format:
 - Pillow images: `L`, `RGB`, `RGBA`
 
 ## Install
+
+[PyPI package](https://pypi.org/project/scalerack/)
 
 ```bash
 pip install scalerack          # core resampler
