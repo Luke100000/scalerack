@@ -1,8 +1,3 @@
-"""Regenerate the README preview gallery from the checked-in samples.
-
-Run from the repository root: ``python scripts/generate_previews.py``
-"""
-
 import inspect
 import sys
 from dataclasses import dataclass
@@ -27,23 +22,19 @@ class PreviewTask:
     name: str
     path: Path
     factor: float
-    original_direction: str
     reconstruct_from_downscale: bool = False
 
 
 PREVIEW_TASKS = (
-    PreviewTask("photo", SAMPLES_DIRECTORY / "photo_downscale.jpg", DOWNSCALE_FACTOR, "downscale"),
-    PreviewTask(
-        "sprite", SAMPLES_DIRECTORY / "sprite_downscale.png", DOWNSCALE_FACTOR, "downscale"
-    ),
+    PreviewTask("photo", SAMPLES_DIRECTORY / "photo_downscale.jpg", DOWNSCALE_FACTOR),
+    PreviewTask("sprite", SAMPLES_DIRECTORY / "sprite_downscale.png", DOWNSCALE_FACTOR),
     PreviewTask(
         "photo",
         SAMPLES_DIRECTORY / "photo_upscale.jpg",
         UPSCALE_FACTOR,
-        "upscale",
         reconstruct_from_downscale=True,
     ),
-    PreviewTask("sprite", SAMPLES_DIRECTORY / "sprite_upscale.png", UPSCALE_FACTOR, "upscale"),
+    PreviewTask("sprite", SAMPLES_DIRECTORY / "sprite_upscale.png", UPSCALE_FACTOR),
 )
 
 
@@ -80,11 +71,9 @@ def save_preview(image: Image.Image, path: Path) -> None:
     print(f"wrote {path.relative_to(DOCS_DIRECTORY.parent)}")
 
 
-def generate_originals() -> None:
-    for task in PREVIEW_TASKS:
-        source = open_sample(task)
-        output_path = PREVIEWS_DIRECTORY / f"original_{task.original_direction}_{task.name}.png"
-        save_preview(source, output_path)
+def preview_output_path(prefix: str, direction: str, sample_name: str) -> Path:
+    extension = ".jpg" if direction == "upscale" and sample_name == "photo" else ".png"
+    return PREVIEWS_DIRECTORY / f"{prefix}_{direction}_{sample_name}{extension}"
 
 
 def generate_algorithm_previews() -> None:
@@ -117,7 +106,6 @@ def main() -> int:
             print(f"  {path.relative_to(DOCS_DIRECTORY.parent)}")
         return 1
 
-    generate_originals()
     generate_algorithm_previews()
 
     print(f"previews complete for {len(scalerack.ALGORITHMS)} algorithms")
