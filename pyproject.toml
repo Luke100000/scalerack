@@ -32,7 +32,8 @@ Issues = "https://github.com/Luke100000/scalerack/issues"
 
 [project.optional-dependencies]
 cli = ["pillow>=10", "cyclopts>=3"]
-all = ["scalerack[cli]"]
+content-adaptive-downscale = ["scikit-image>=0.24"]
+all = ["scalerack[cli,content-adaptive-downscale]"]
 
 [project.scripts]
 scalerack = "scalerack.cli:main"
@@ -43,6 +44,7 @@ dev = [
     "ruff>=0.6",
     "mypy>=1.11",
     "pillow>=10",
+    "scikit-image>=0.24",
     "cyclopts>=3",
     "pre-commit>=4",
 ]

@@ -1,50 +1,42 @@
 from collections.abc import Callable
-from typing import cast
 
 import numpy as np
 
 from scalerack.algorithms.registry import register
-from scalerack.image_io import ImageT, from_array, to_array
+from scalerack.image_io import ImageInput, as_image_input
 from scalerack.resample import drop_channel_axis, ensure_channel_axis
 
 ExpandFunction = Callable[[np.ndarray], np.ndarray]
 
 
 @register
-def scale2x(image: ImageT) -> ImageT:
-    """Enlarge pixel art exactly 2x with the Scale2x (EPX) neighborhood rules.
-
-    Smooths diagonals by copying matching neighbors, never by blending;
-    made for sprites and low-color art, not photographs.
-    """
+def scale2x(image: ImageInput) -> ImageInput:
+    """Enlarge pixel art exactly 2x with the Scale2x (EPX) neighborhood rules."""
     return run_epx(image, expand_scale2x)
 
 
 @register
-def scale3x(image: ImageT) -> ImageT:
+def scale3x(image: ImageInput) -> ImageInput:
     """Enlarge pixel art exactly 3x with the Scale3x neighborhood rules."""
     return run_epx(image, expand_scale3x)
 
 
 @register
-def scale4x(image: ImageT) -> ImageT:
+def scale4x(image: ImageInput) -> ImageInput:
     """Enlarge pixel art exactly 4x by applying Scale2x twice."""
     return run_epx(image, expand_scale4x)
 
 
-def run_epx(image: ImageT, expand: ExpandFunction) -> ImageT:
-    """Expand with the given rule set and restore the input representation."""
-    array = to_array(image)
+def run_epx(image: ImageInput, expand: ExpandFunction) -> ImageInput:
+    image_input = as_image_input(image)
+    array = image_input.numpy()
     values = ensure_channel_axis(array)
     result = drop_channel_axis(expand(values), array.ndim)
-    return cast(ImageT, from_array(result, image))
+    return image_input.from_numpy(result)
 
 
 def expand_scale2x(values: np.ndarray) -> np.ndarray:
-    """Apply the Scale2x rules once, mapping (H, W, C) to (2H, 2W, C).
-
-    Clean-room implementation from the published rule set (scale2x.it/algorithm).
-    """
+    """Apply the Scale2x rules once, mapping (H, W, C) to (2H, 2W, C)."""
     height, width, channels = values.shape
     center = values
     up, down, left, right = extract_edge_neighbors(values)

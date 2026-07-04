@@ -1,18 +1,18 @@
 from scalerack.algorithms.registry import register
-from scalerack.image_io import ImageT
+from scalerack.image_io import ImageInput
 from scalerack.kernels import make_keys_cubic_kernel
 from scalerack.resample import resample_with_kernel
 
 
 @register
 def bicubic(
-    image: ImageT,
+    image: ImageInput,
     factor: float | None = None,
     *,
     width: int | None = None,
     height: int | None = None,
     a: float = -0.5,
-) -> ImageT:
+) -> ImageInput:
     """Scale with the classic Keys bicubic kernel.
 
     Sharper than bilinear with mild overshoot; the general-purpose default

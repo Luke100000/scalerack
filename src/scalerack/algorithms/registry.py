@@ -1,7 +1,9 @@
 from collections.abc import Callable
-from typing import Any, TypeVar
+from typing import TypeVar
 
-Algorithm = Callable[..., Any]
+from scalerack.image_io import ImageInput
+
+Algorithm = Callable[..., ImageInput]
 AlgorithmT = TypeVar("AlgorithmT", bound=Algorithm)
 
 ALGORITHMS: dict[str, Algorithm] = {}

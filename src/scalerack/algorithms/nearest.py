@@ -1,33 +1,29 @@
-from typing import cast
-
 import numpy as np
 
 from scalerack.algorithms.registry import register
-from scalerack.image_io import ImageT, from_array, to_array
-from scalerack.validation import resolve_output_size
+from scalerack.image_io import ImageInput, as_image_input
 
 
 @register
 def nearest(
-    image: ImageT,
+    image: ImageInput,
     factor: float | None = None,
     *,
     width: int | None = None,
     height: int | None = None,
-) -> ImageT:
+) -> ImageInput:
     """Scale by copying the nearest source pixel.
 
     Preserves exact pixel values; the right choice for masks, label maps,
     and deliberately blocky display of low-resolution art.
     """
-    array = to_array(image)
-    output_height, output_width = resolve_output_size(
-        array.shape[0], array.shape[1], factor, width, height
-    )
+    image_input = as_image_input(image)
+    array = image_input.numpy()
+    output_width, output_height = image_input.get_target_dimensions(width, height, factor)
     row_indices = compute_nearest_indices(array.shape[0], output_height)
     col_indices = compute_nearest_indices(array.shape[1], output_width)
     result = array[row_indices][:, col_indices]
-    return cast(ImageT, from_array(result, image))
+    return image_input.from_numpy(result)
 
 
 def compute_nearest_indices(input_size: int, output_size: int) -> np.ndarray:

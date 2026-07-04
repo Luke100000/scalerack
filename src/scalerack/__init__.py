@@ -1,6 +1,6 @@
 import inspect
 from importlib import metadata
-from typing import Any, cast
+from typing import TypeVar
 
 from scalerack.algorithms.bicubic import bicubic
 from scalerack.algorithms.bilinear import bilinear
@@ -19,12 +19,12 @@ from scalerack.exceptions import (
     UnknownAlgorithmError,
     UnsupportedImageError,
 )
-from scalerack.image_io import ImageT, to_array
+from scalerack.image_io import ImageInput, as_image_input
 from scalerack.validation import derive_factor, resolve_output_size
 
 __all__ = [
     "ALGORITHMS",
-    "ImageT",
+    "ImageInput",
     "InvalidFactorError",
     "ScalerackError",
     "UnknownAlgorithmError",
@@ -51,6 +51,9 @@ except metadata.PackageNotFoundError:
     __version__ = "0.0.0.dev0"
 
 
+ImageT = TypeVar("ImageT")
+
+
 def resize(
     method: str,
     image: ImageT,
@@ -58,7 +61,7 @@ def resize(
     *,
     width: int | None = None,
     height: int | None = None,
-    **opts: Any,
+    **opts: object,
 ) -> ImageT:
     """Scale an image with the algorithm named by ``method``.
 
@@ -74,29 +77,30 @@ def resize(
             f"unknown algorithm '{method}'; available algorithms: {sorted(ALGORITHMS)}"
         )
 
+    image_input = as_image_input(image)
     function = ALGORITHMS[method]
     parameters = inspect.signature(function).parameters
     accepts_factor = "factor" in parameters
     accepts_dimensions = "width" in parameters and "height" in parameters
 
     if accepts_factor and accepts_dimensions:
-        return cast(ImageT, function(image, factor=factor, width=width, height=height, **opts))
+        return function(image_input, factor=factor, width=width, height=height, **opts).raw
 
     if accepts_factor:
         if width is not None or height is not None:
-            array = to_array(image)
+            array = image_input.numpy()
             factor = derive_factor(array.shape[0], array.shape[1], width, height)
         if factor is None:
-            return cast(ImageT, function(image, **opts))
-        return cast(ImageT, function(image, factor=factor, **opts))
+            return function(image_input, **opts).raw
+        return function(image_input, factor=factor, **opts).raw
 
     if accepts_dimensions:
         if factor is not None:
-            array = to_array(image)
+            array = image_input.numpy()
             output_height, output_width = resolve_output_size(
                 array.shape[0], array.shape[1], factor, width, height
             )
             width, height = output_width, output_height
-        return cast(ImageT, function(image, width=width, height=height, **opts))
+        return function(image_input, width=width, height=height, **opts).raw
 
-    return cast(ImageT, function(image, **opts))
+    return function(image_input, **opts).raw

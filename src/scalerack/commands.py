@@ -4,7 +4,6 @@ import cyclopts
 from PIL import Image
 
 import scalerack
-from scalerack.constants import SUPPORTED_PIL_MODES
 
 app = cyclopts.App(
     name="scalerack",
@@ -38,12 +37,11 @@ def scale(
         opt: Algorithm-specific KEY=VALUE option, repeatable (e.g. --opt taps=4).
     """
     with Image.open(input_path) as source:
-        normalized = normalize_mode(source)
         options = parse_options(opt or [])
-        result = scalerack.resize(method, normalized, factor, width=width, height=height, **options)
+        result = scalerack.resize(method, source, factor, width=width, height=height, **options)
         result.save(output_path)
         print(
-            f"{output_path} ({normalized.width}x{normalized.height} -> "
+            f"{output_path} ({source.width}x{source.height} -> "
             f"{result.width}x{result.height}, {method})"
         )
 
@@ -77,11 +75,3 @@ def coerce_option_value(raw_value: str) -> OptionValue:
         return float(raw_value)
     except ValueError:
         return raw_value
-
-
-def normalize_mode(image: Image.Image) -> Image.Image:
-    """Convert unsupported PIL modes to RGBA (alpha-bearing or palette) or RGB."""
-    if image.mode in SUPPORTED_PIL_MODES:
-        return image
-    has_alpha = "A" in image.mode or image.mode == "P"
-    return image.convert("RGBA" if has_alpha else "RGB")

@@ -1,18 +1,18 @@
 from scalerack.algorithms.registry import register
-from scalerack.image_io import ImageT
+from scalerack.image_io import ImageInput
 from scalerack.kernels import make_lanczos_kernel
 from scalerack.resample import resample_with_kernel
 
 
 @register
 def lanczos(
-    image: ImageT,
+    image: ImageInput,
     factor: float | None = None,
     *,
     width: int | None = None,
     height: int | None = None,
     taps: int = 3,
-) -> ImageT:
+) -> ImageInput:
     """Scale with a Lanczos windowed-sinc kernel.
 
     The high-detail standard for photographic content; may ring at hard edges.

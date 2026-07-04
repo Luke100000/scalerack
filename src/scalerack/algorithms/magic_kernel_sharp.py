@@ -1,18 +1,18 @@
 from scalerack.algorithms.registry import register
-from scalerack.image_io import ImageT
+from scalerack.image_io import ImageInput
 from scalerack.kernels import make_magic_kernel_sharp
 from scalerack.resample import resample_with_kernel
 
 
 @register
 def magic_kernel_sharp(
-    image: ImageT,
+    image: ImageInput,
     factor: float | None = None,
     *,
     width: int | None = None,
     height: int | None = None,
     version: int = 2021,
-) -> ImageT:
+) -> ImageInput:
     """Scale with Costella's Magic Kernel Sharp.
 
     A crisp modern alternative to plain cubic kernels.

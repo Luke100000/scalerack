@@ -1,23 +1,21 @@
 from collections.abc import Callable
-from typing import cast
 
 import numpy as np
 
-from scalerack.image_io import ImageT, from_array, restore_dtype, to_array
+from scalerack.image_io import ImageInput, as_image_input
 from scalerack.kernels import Kernel
-from scalerack.validation import resolve_output_size
 
 ComputeFunction = Callable[[np.ndarray, int, int], np.ndarray]
 
 
 def resample_with_kernel(
-    image: ImageT,
+    image: ImageInput,
     kernel: Kernel,
     *,
     factor: float | None,
     width: int | None,
     height: int | None,
-) -> ImageT:
+) -> ImageInput:
     """Validate the request, filter both axes with the kernel, restore the representation."""
 
     def compute(values: np.ndarray, output_height: int, output_width: int) -> np.ndarray:
@@ -31,27 +29,26 @@ def resample_with_kernel(
 
 
 def run_pipeline(
-    image: ImageT,
+    image: ImageInput,
     compute: ComputeFunction,
     *,
     factor: float | None,
     width: int | None,
     height: int | None,
-) -> ImageT:
+) -> ImageInput:
     """Common flow: validate, convert to float, compute, cast back, restore representation."""
-    array = to_array(image)
-    output_height, output_width = resolve_output_size(
-        array.shape[0], array.shape[1], factor, width, height
-    )
+    image_input = as_image_input(image)
+    array = image_input.numpy()
+    output_width, output_height = image_input.get_target_dimensions(width, height, factor)
     if (output_height, output_width) == array.shape[:2]:
-        return cast(ImageT, from_array(array.copy(), image))
+        return image_input.from_numpy(array.copy())
     # float32 carries uint8 content losslessly and halves the filtering cost;
     # float inputs keep their own precision.
     compute_dtype = np.float32 if array.dtype == np.uint8 else array.dtype
     values = ensure_channel_axis(array).astype(compute_dtype)
     filtered = compute(values, output_height, output_width)
-    result = drop_channel_axis(restore_dtype(filtered, array.dtype), array.ndim)
-    return cast(ImageT, from_array(result, image))
+    result = drop_channel_axis(filtered, array.ndim)
+    return image_input.from_numpy(result)
 
 
 def build_kernel_weights(

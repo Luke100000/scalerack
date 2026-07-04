@@ -1,17 +1,17 @@
 from scalerack.algorithms.registry import register
-from scalerack.image_io import ImageT
+from scalerack.image_io import ImageInput
 from scalerack.kernels import make_triangle_kernel
 from scalerack.resample import resample_with_kernel
 
 
 @register
 def bilinear(
-    image: ImageT,
+    image: ImageInput,
     factor: float | None = None,
     *,
     width: int | None = None,
     height: int | None = None,
-) -> ImageT:
+) -> ImageInput:
     """Scale with linear interpolation over the triangle kernel.
 
     A fast, artifact-light baseline; visibly softer than the cubic and

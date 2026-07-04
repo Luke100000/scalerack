@@ -1,10 +1,10 @@
-import importlib.util
 from pathlib import Path
 
 import numpy as np
 import pytest
 
 import scalerack
+from scalerack.image_io import ImageInput
 
 CLASSICAL_SMOKE_FACTOR = 1.7
 SMOKE_FACTORS = {
@@ -13,7 +13,6 @@ SMOKE_FACTORS = {
     "scale3x": 3.0,
     "scale4x": 4.0,
 }
-PILLOW_INSTALLED = importlib.util.find_spec("PIL") is not None
 
 
 class TestScalerSmoke:
@@ -30,22 +29,21 @@ class TestScalerSmoke:
         assert result.dtype == complex_image.dtype
         expected_height = round(complex_image.shape[0] * factor)
         expected_width = round(complex_image.shape[1] * factor)
-        expected_channels = 3 if name == "content_adaptive_downscale" else complex_image.shape[2]
+        expected_channels = complex_image.shape[2]
         assert result.shape == (expected_height, expected_width, expected_channels)
 
-    @pytest.mark.skipif(not PILLOW_INSTALLED, reason="Pillow not installed")
     def test_pil_image_round_trips(self, complex_image: np.ndarray) -> None:
         """A PIL image in yields a PIL image of the same mode out."""
         from PIL import Image
 
         source = Image.fromarray(complex_image)
         result = scalerack.lanczos(source, factor=2)
-        assert isinstance(result, Image.Image)
-        assert result.mode == source.mode
-        assert result.size == (source.width * 2, source.height * 2)
+        assert isinstance(result, ImageInput)
+        assert isinstance(result.raw, Image.Image)
+        assert result.raw.mode == source.mode
+        assert result.raw.size == (source.width * 2, source.height * 2)
 
 
-@pytest.mark.skipif(not PILLOW_INSTALLED, reason="Pillow not installed")
 class TestCliSmoke:
     """The CLI scales one file end to end."""
 

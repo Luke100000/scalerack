@@ -1,17 +1,17 @@
 from scalerack.algorithms.registry import register
-from scalerack.image_io import ImageT
+from scalerack.image_io import ImageInput
 from scalerack.kernels import make_bc_spline_kernel
 from scalerack.resample import resample_with_kernel
 
 
 @register
 def catmull_rom(
-    image: ImageT,
+    image: ImageInput,
     factor: float | None = None,
     *,
     width: int | None = None,
     height: int | None = None,
-) -> ImageT:
+) -> ImageInput:
     """Scale with the Catmull-Rom interpolating spline.
 
     Sharper than Mitchell; a good pick when extra acutance is worth a

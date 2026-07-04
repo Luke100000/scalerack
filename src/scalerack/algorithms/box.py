@@ -1,18 +1,18 @@
 import numpy as np
 
 from scalerack.algorithms.registry import register
-from scalerack.image_io import ImageT
+from scalerack.image_io import ImageInput
 from scalerack.resample import filter_axis, normalize_rows, run_pipeline
 
 
 @register
 def box(
-    image: ImageT,
+    image: ImageInput,
     factor: float | None = None,
     *,
     width: int | None = None,
     height: int | None = None,
-) -> ImageT:
+) -> ImageInput:
     """Scale by averaging each output pixel's exact source footprint.
 
     The best-behaved choice for downscaling (area interpolation); upscaling

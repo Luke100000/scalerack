@@ -1,325 +1,453 @@
-from dataclasses import dataclass
-from typing import cast
+import math
+from typing import Protocol
 
 import numpy as np
 
 from scalerack.algorithms.registry import register
-from scalerack.exceptions import InvalidFactorError, UnsupportedImageError
-from scalerack.image_io import (
-    ImageT,
-    from_array,
-    remove_alpha_channel,
-    restore_dtype,
-    to_array,
-)
-from scalerack.resample import drop_channel_axis, ensure_channel_axis
-from scalerack.validation import resolve_output_size
-
-DEFAULT_ITERATIONS = 6
-MIN_COLOR_VARIANCE = 1.0e-4
-COLOR_VARIANCE_GROWTH = 1.1
-EPSILON = 1.0e-12
+from scalerack.image_io import ImageInput, as_image_input
 
 
-@dataclass
-class AdaptiveSample:
-    center: np.ndarray
-    covariance: np.ndarray
-    color: np.ndarray
-    color_variance: float
+class ColorModule(Protocol):
+    def rgb2lab(self, rgb: np.ndarray) -> np.ndarray: ...
+
+    def lab2rgb(self, lab: np.ndarray) -> np.ndarray: ...
+
+
+def _skimage_color() -> ColorModule:
+    try:
+        from skimage import color
+    except ImportError as exc:
+        raise RuntimeError(
+            "content_adaptive_downscale requires the optional dependency scikit-image"
+        ) from exc
+    return color
+
+
+def _rgb_to_lab01(rgb: np.ndarray) -> np.ndarray:
+    lab = _skimage_color().rgb2lab(np.clip(rgb, 0.0, 1.0))
+    out = np.empty_like(lab, dtype=np.float64)
+    out[..., 0] = lab[..., 0] / 100.0
+    out[..., 1] = (lab[..., 1] + 128.0) / 255.0
+    out[..., 2] = (lab[..., 2] + 128.0) / 255.0
+    return out
+
+
+def _lab01_to_rgb(lab01: np.ndarray) -> np.ndarray:
+    lab = np.empty_like(lab01, dtype=np.float64)
+    lab[..., 0] = lab01[..., 0] * 100.0
+    lab[..., 1] = lab01[..., 1] * 255.0 - 128.0
+    lab[..., 2] = lab01[..., 2] * 255.0 - 128.0
+    return np.clip(_skimage_color().lab2rgb(lab), 0.0, 1.0)
+
+
+def _resize_alpha(alpha: np.ndarray, wo: int, ho: int) -> np.ndarray:
+    hi, wi = alpha.shape
+
+    xs = (np.arange(wo) + 0.5) * wi / wo - 0.5
+    ys = (np.arange(ho) + 0.5) * hi / ho - 0.5
+
+    x0 = np.floor(xs).astype(int)
+    y0 = np.floor(ys).astype(int)
+
+    x1 = np.clip(x0 + 1, 0, wi - 1)
+    y1 = np.clip(y0 + 1, 0, hi - 1)
+
+    x0 = np.clip(x0, 0, wi - 1)
+    y0 = np.clip(y0, 0, hi - 1)
+
+    wx = xs - x0
+    wy = ys - y0
+
+    top = (
+        alpha[y0[:, None], x0[None, :]] * (1.0 - wx)[None, :]
+        + alpha[y0[:, None], x1[None, :]] * wx[None, :]
+    )
+    bot = (
+        alpha[y1[:, None], x0[None, :]] * (1.0 - wx)[None, :]
+        + alpha[y1[:, None], x1[None, :]] * wx[None, :]
+    )
+
+    return top * (1.0 - wy)[:, None] + bot * wy[:, None]
+
+
+def _angle_degrees(a: np.ndarray, b: np.ndarray) -> float:
+    na = float(np.linalg.norm(a))
+    nb = float(np.linalg.norm(b))
+
+    if na < 1e-12 or nb < 1e-12:
+        return 0.0
+
+    c = abs(float(np.dot(a, b)) / (na * nb))
+    return math.degrees(math.acos(float(np.clip(c, -1.0, 1.0))))
+
+
+def _neighbors4(k: int, wo: int, ho: int) -> list[int]:
+    x = k % wo
+    y = k // wo
+    out: list[int] = []
+
+    if x > 0:
+        out.append(k - 1)
+    if x + 1 < wo:
+        out.append(k + 1)
+    if y > 0:
+        out.append(k - wo)
+    if y + 1 < ho:
+        out.append(k + wo)
+
+    return out
+
+
+def _neighbors8(k: int, wo: int, ho: int) -> list[int]:
+    x = k % wo
+    y = k // wo
+    out: list[int] = []
+
+    for dy in (-1, 0, 1):
+        for dx in (-1, 0, 1):
+            if dx == 0 and dy == 0:
+                continue
+
+            xx = x + dx
+            yy = y + dy
+
+            if 0 <= xx < wo and 0 <= yy < ho:
+                out.append(yy * wo + xx)
+
+    return out
+
+
+def _edge_orientation_vector(
+    k: int,
+    n: int,
+    *,
+    supports: list[np.ndarray],
+    gamma: list[np.ndarray],
+    wi: int,
+    hi: int,
+    rx: float,
+    ry: float,
+    eps: float,
+) -> np.ndarray:
+    idx_k = supports[k]
+    idx_n = supports[n]
+    union = np.union1d(idx_k, idx_n)
+
+    if union.size == 0:
+        return np.zeros(2, dtype=np.float64)
+
+    uy = union // wi
+    ux = union % wi
+
+    y0 = max(0, int(uy.min()) - 1)
+    y1 = min(hi - 1, int(uy.max()) + 1)
+    x0 = max(0, int(ux.min()) - 1)
+    x1 = min(wi - 1, int(ux.max()) + 1)
+
+    gh = y1 - y0 + 1
+    gw = x1 - x0 + 1
+
+    gk = np.zeros((gh, gw), dtype=np.float64)
+    gn = np.zeros((gh, gw), dtype=np.float64)
+
+    yk = idx_k // wi
+    xk = idx_k % wi
+    m = (y0 <= yk) & (yk <= y1) & (x0 <= xk) & (xk <= x1)
+    gk[yk[m] - y0, xk[m] - x0] = gamma[k][m]
+
+    yn = idx_n // wi
+    xn = idx_n % wi
+    m = (y0 <= yn) & (yn <= y1) & (x0 <= xn) & (xn <= x1)
+    gn[yn[m] - y0, xn[m] - x0] = gamma[n][m]
+
+    den = gk + gn
+    q = np.full_like(den, 0.5)
+    np.divide(gk, den, out=q, where=den > eps)
+
+    grad_y, grad_x = np.gradient(q)
+
+    return np.array(
+        [
+            float(grad_x.sum()) * rx,
+            float(grad_y.sum()) * ry,
+        ],
+        dtype=np.float64,
+    )
 
 
 @register
 def content_adaptive_downscale(
-    image: ImageT,
+    image: ImageInput,
     factor: float | None = None,
     *,
     width: int | None = None,
     height: int | None = None,
-    iterations: int = DEFAULT_ITERATIONS,
-) -> ImageT:
-    """Downscale with content-adaptive kernels that preserve edge detail."""
-    array = to_array(image)
-    visible = remove_alpha_channel(array)
-    validate_finite_values(visible)
-    output_height, output_width = resolve_output_size(
-        visible.shape[0], visible.shape[1], factor, width, height
-    )
-    validate_downscale(visible.shape[0], visible.shape[1], output_height, output_width)
-    validate_iterations(iterations)
+    staircase_constraint: bool = True,
+    locality_constraint: bool = True,
+    spatial_constraints: bool = True,
+    variance_constraints: bool = True,
+    max_iter: int = 30,
+    color_sigma: float = 0.04,
+    tol: float = 5e-4,
+    strict_pseudocode_init: bool = False,
+    locality_threshold: float | None = None,
+    edge_strength_threshold: float | None = None,
+) -> ImageInput:
+    image_input = as_image_input(image)
+    rgba = image_input.rgba().astype(np.float64)
+    rgb = np.clip(rgba[:, :, :3], 0.0, 1.0)
+    alpha = np.clip(rgba[:, :, 3], 0.0, 1.0)
 
-    compute_dtype = np.float32 if visible.dtype == np.uint8 else visible.dtype
-    values = ensure_channel_axis(visible).astype(compute_dtype, copy=False)
-    filtered = adaptive_downscale(values, output_height, output_width, iterations)
-    restored = restore_dtype(filtered, visible.dtype)
-    result = drop_channel_axis(restored, visible.ndim)
-    return cast(ImageT, from_array(result, image))
+    hi, wi = rgb.shape[:2]
+    wo, ho = image_input.get_target_dimensions(width, height, factor)
+    if wo > wi or ho > hi:
+        raise ValueError("This implementation only downscales.")
 
+    if (wo, ho) == (wi, hi):
+        return image_input.from_numpy(image_input.numpy().copy())
 
-def validate_finite_values(array: np.ndarray) -> None:
-    """Reject NaN and infinite float values before iterative processing."""
-    if np.issubdtype(array.dtype, np.floating) and not np.isfinite(array).all():
-        raise UnsupportedImageError("content_adaptive_downscale requires finite pixel values")
+    if color_sigma <= 0:
+        raise ValueError("color_sigma must be positive.")
 
+    if max_iter <= 0:
+        raise ValueError("max_iter must be positive.")
 
-def validate_downscale(
-    input_height: int, input_width: int, output_height: int, output_width: int
-) -> None:
-    """Content-adaptive downscaling is defined only for true downscales."""
-    if output_height >= input_height or output_width >= input_width:
-        raise InvalidFactorError(
-            "content_adaptive_downscale requires output width and height "
-            "to be smaller than the input"
-        )
+    eps = 1e-300
+    rx = wi / wo
+    ry = hi / ho
 
+    if locality_threshold is None:
+        locality_threshold = 0.2 * rx
 
-def validate_iterations(iterations: int) -> None:
-    if isinstance(iterations, bool) or not isinstance(iterations, int) or iterations < 1:
-        raise InvalidFactorError(f"iterations must be a positive integer, got {iterations!r}")
+    if edge_strength_threshold is None:
+        edge_strength_threshold = 0.08 * rx * ry
 
+    lab = _rgb_to_lab01(rgb)
+    colors = lab.reshape(-1, 3)
 
-def adaptive_downscale(
-    values: np.ndarray, output_height: int, output_width: int, iterations: int
-) -> np.ndarray:
-    """Optimize one adaptive sample per output pixel using local EM-style updates."""
-    input_height, input_width, channels = values.shape
-    ratio_x = input_width / output_width
-    ratio_y = input_height / output_height
-    nominal_centers = make_nominal_centers(output_height, output_width, ratio_x, ratio_y)
-    samples = initialize_samples(values, nominal_centers, ratio_x, ratio_y)
-    pixel_positions = make_pixel_positions(input_height, input_width)
-    regions = make_support_regions(input_height, input_width, nominal_centers, ratio_x, ratio_y)
+    yy, xx = np.indices((hi, wi), dtype=np.float64)
+    pos = np.stack((xx.ravel(), yy.ravel()), axis=1)
 
-    responsibilities: list[np.ndarray] = []
-    for _ in range(iterations):
-        responsibilities = expectation_step(values, pixel_positions, samples, regions)
-        previous = sample_state(samples)
-        maximization_step(values, pixel_positions, samples, regions, responsibilities)
-        correction_step(samples, nominal_centers, output_height, output_width, ratio_x, ratio_y)
-        if has_converged(previous, sample_state(samples)):
-            break
-
-    output = np.array([sample.color for sample in samples], dtype=values.dtype)
-    return output.reshape(output_height, output_width, channels)
-
-
-def make_nominal_centers(
-    output_height: int, output_width: int, ratio_x: float, ratio_y: float
-) -> np.ndarray:
-    cols = (np.arange(output_width, dtype=np.float64) + 0.5) * ratio_x - 0.5
-    rows = (np.arange(output_height, dtype=np.float64) + 0.5) * ratio_y - 0.5
-    grid_x, grid_y = np.meshgrid(cols, rows)
-    return np.stack([grid_x.ravel(), grid_y.ravel()], axis=1)
-
-
-def initialize_samples(
-    values: np.ndarray, nominal_centers: np.ndarray, ratio_x: float, ratio_y: float
-) -> list[AdaptiveSample]:
-    covariance = np.array(
-        [[max((ratio_x / 3.0) ** 2, 0.05), 0.0], [0.0, max((ratio_y / 3.0) ** 2, 0.05)]],
+    centers = np.array(
+        [((ox + 0.5) * rx, (oy + 0.5) * ry) for oy in range(ho) for ox in range(wo)],
         dtype=np.float64,
     )
-    neutral = np.full(values.shape[2], 0.5, dtype=np.float64)
-    return [
-        AdaptiveSample(
-            center=center.copy(),
-            covariance=covariance.copy(),
-            color=neutral.copy(),
-            color_variance=MIN_COLOR_VARIANCE,
-        )
-        for center in nominal_centers
-    ]
 
-
-def make_pixel_positions(input_height: int, input_width: int) -> np.ndarray:
-    rows, cols = np.indices((input_height, input_width), dtype=np.float64)
-    return np.stack([cols.ravel(), rows.ravel()], axis=1)
-
-
-def make_support_regions(
-    input_height: int,
-    input_width: int,
-    nominal_centers: np.ndarray,
-    ratio_x: float,
-    ratio_y: float,
-) -> list[np.ndarray]:
-    regions: list[np.ndarray] = []
-    for center_x, center_y in nominal_centers:
-        left = max(0, int(np.floor(center_x - 2.0 * ratio_x)))
-        right = min(input_width - 1, int(np.ceil(center_x + 2.0 * ratio_x)))
-        top = max(0, int(np.floor(center_y - 2.0 * ratio_y)))
-        bottom = min(input_height - 1, int(np.ceil(center_y + 2.0 * ratio_y)))
-        xs = np.arange(left, right + 1, dtype=np.int64)
-        ys = np.arange(top, bottom + 1, dtype=np.int64)
-        grid_x, grid_y = np.meshgrid(xs, ys)
-        regions.append((grid_y.ravel() * input_width + grid_x.ravel()).astype(np.int64))
-    return regions
-
-
-def expectation_step(
-    values: np.ndarray,
-    pixel_positions: np.ndarray,
-    samples: list[AdaptiveSample],
-    regions: list[np.ndarray],
-) -> list[np.ndarray]:
-    flattened = values.reshape(-1, values.shape[2])
-    per_sample_weights: list[np.ndarray] = []
-    pixel_totals = np.zeros(flattened.shape[0], dtype=np.float64)
-
-    for sample, region in zip(samples, regions, strict=True):
-        positions = pixel_positions[region]
-        colors = flattened[region].astype(np.float64, copy=False)
-        spatial_weights = gaussian_spatial_weights(positions, sample)
-        color_weights = gaussian_color_weights(colors, sample)
-        weights = spatial_weights * color_weights
-        total = weights.sum()
-        if total <= EPSILON:
-            weights = np.full(region.shape, 1.0 / region.size, dtype=np.float64)
-        else:
-            weights = weights / total
-        per_sample_weights.append(weights)
-        pixel_totals[region] += weights
-
-    responsibilities: list[np.ndarray] = []
-    for region, weights in zip(regions, per_sample_weights, strict=True):
-        totals = pixel_totals[region]
-        responsibilities.append(weights / np.maximum(totals, EPSILON))
-    return responsibilities
-
-
-def gaussian_spatial_weights(positions: np.ndarray, sample: AdaptiveSample) -> np.ndarray:
-    delta = positions - sample.center
-    inverse = np.linalg.pinv(sample.covariance)
-    distance = np.einsum("ij,jk,ik->i", delta, inverse, delta)
-    return np.exp(-0.5 * np.clip(distance, 0.0, 60.0))
-
-
-def gaussian_color_weights(colors: np.ndarray, sample: AdaptiveSample) -> np.ndarray:
-    delta = colors - sample.color
-    distance = np.sum(delta * delta, axis=1) / max(2.0 * sample.color_variance, EPSILON)
-    return np.exp(-np.clip(distance, 0.0, 60.0))
-
-
-def maximization_step(
-    values: np.ndarray,
-    pixel_positions: np.ndarray,
-    samples: list[AdaptiveSample],
-    regions: list[np.ndarray],
-    responsibilities: list[np.ndarray],
-) -> None:
-    flattened = values.reshape(-1, values.shape[2])
-    for sample, region, gamma in zip(samples, regions, responsibilities, strict=True):
-        weight_sum = gamma.sum()
-        if weight_sum <= EPSILON:
-            continue
-        positions = pixel_positions[region]
-        colors = flattened[region].astype(np.float64, copy=False)
-        sample.center = np.sum(gamma[:, None] * positions, axis=0) / weight_sum
-        sample.color = np.sum(gamma[:, None] * colors, axis=0) / weight_sum
-        centered = positions - sample.center
-        sample.covariance = (centered * gamma[:, None]).T @ centered / weight_sum
-        color_delta = colors - sample.color
-        sample.color_variance = max(
-            float(np.sum(gamma * np.sum(color_delta * color_delta, axis=1)) / weight_sum),
-            MIN_COLOR_VARIANCE,
-        )
-
-
-def correction_step(
-    samples: list[AdaptiveSample],
-    nominal_centers: np.ndarray,
-    output_height: int,
-    output_width: int,
-    ratio_x: float,
-    ratio_y: float,
-) -> None:
-    smooth_centers = [sample.center.copy() for sample in samples]
-    for index, _sample in enumerate(samples):
-        neighbors = four_neighbors(index, output_height, output_width)
-        if neighbors:
-            smooth_centers[index] = np.mean(
-                [samples[neighbor].center for neighbor in neighbors], axis=0
-            )
-
-    for index, sample in enumerate(samples):
-        nominal = nominal_centers[index]
-        blended = 0.5 * sample.center + 0.5 * smooth_centers[index]
-        sample.center = np.array(
-            [
-                np.clip(blended[0], nominal[0] - ratio_x / 4.0, nominal[0] + ratio_x / 4.0),
-                np.clip(blended[1], nominal[1] - ratio_y / 4.0, nominal[1] + ratio_y / 4.0),
-            ],
-            dtype=np.float64,
-        )
-        sample.covariance = clamp_covariance(sample.covariance, ratio_x, ratio_y)
-
-    for index, sample in enumerate(samples):
-        for neighbor_index in eight_neighbors(index, output_height, output_width):
-            neighbor = samples[neighbor_index]
-            color_distance = float(np.linalg.norm(sample.color - neighbor.color))
-            center_distance = float(np.linalg.norm(sample.center - neighbor.center))
-            if color_distance < 0.08 and center_distance > max(ratio_x, ratio_y) * 1.25:
-                sample.color_variance *= COLOR_VARIANCE_GROWTH
-                neighbor.color_variance *= COLOR_VARIANCE_GROWTH
-
-
-def clamp_covariance(covariance: np.ndarray, ratio_x: float, ratio_y: float) -> np.ndarray:
-    covariance = 0.5 * (covariance + covariance.T)
-    try:
-        vectors, singular_values, _ = np.linalg.svd(covariance)
-    except np.linalg.LinAlgError:
-        return np.array(
-            [[max((ratio_x / 3.0) ** 2, 0.05), 0.0], [0.0, max((ratio_y / 3.0) ** 2, 0.05)]]
-        )
-    lower = max(0.05, min(ratio_x, ratio_y) ** 2 * 0.05)
-    upper = max(0.1, max(ratio_x, ratio_y) ** 2 * 0.5)
-    clamped = np.clip(singular_values, lower, upper)
-    return vectors @ np.diag(clamped) @ vectors.T
-
-
-def four_neighbors(index: int, height: int, width: int) -> list[int]:
-    row, col = divmod(index, width)
-    neighbors: list[int] = []
-    if row > 0:
-        neighbors.append(index - width)
-    if row + 1 < height:
-        neighbors.append(index + width)
-    if col > 0:
-        neighbors.append(index - 1)
-    if col + 1 < width:
-        neighbors.append(index + 1)
-    return neighbors
-
-
-def eight_neighbors(index: int, height: int, width: int) -> list[int]:
-    row, col = divmod(index, width)
-    neighbors: list[int] = []
-    for d_row in (-1, 0, 1):
-        for d_col in (-1, 0, 1):
-            if d_row == 0 and d_col == 0:
-                continue
-            n_row = row + d_row
-            n_col = col + d_col
-            if 0 <= n_row < height and 0 <= n_col < width:
-                neighbors.append(n_row * width + n_col)
-    return neighbors
-
-
-def sample_state(samples: list[AdaptiveSample]) -> np.ndarray:
-    return np.concatenate(
-        [
-            np.concatenate(
-                [
-                    sample.center,
-                    sample.covariance.ravel(),
-                    sample.color,
-                    np.array([sample.color_variance], dtype=np.float64),
-                ]
-            )
-            for sample in samples
-        ]
+    centers_out = np.array(
+        [(ox + 0.5, oy + 0.5) for oy in range(ho) for ox in range(wo)],
+        dtype=np.float64,
     )
 
+    k_count = wo * ho
 
-def has_converged(previous: np.ndarray, current: np.ndarray) -> bool:
-    return bool(np.allclose(previous, current, rtol=1.0e-4, atol=1.0e-4))
+    supports: list[np.ndarray] = []
+
+    for cx, cy in centers:
+        x0 = max(0, int(np.floor(cx - 2.0 * rx)))
+        x1 = min(wi - 1, int(np.ceil(cx + 2.0 * rx)))
+        y0 = max(0, int(np.floor(cy - 2.0 * ry)))
+        y1 = min(hi - 1, int(np.ceil(cy + 2.0 * ry)))
+
+        xs = np.arange(x0, x1 + 1)
+        ys = np.arange(y0, y1 + 1)
+
+        X, Y = np.meshgrid(xs, ys)
+        idx = (Y * wi + X).ravel().astype(np.int32)
+
+        p = pos[idx]
+        keep = (np.abs(p[:, 0] - cx) < 2.0 * rx) & (np.abs(p[:, 1] - cy) < 2.0 * ry)
+
+        supports.append(idx[keep])
+
+    support_pos = [pos[s] for s in supports]
+    support_col = [colors[s] for s in supports]
+
+    mu = centers.copy()
+
+    cov = np.zeros((k_count, 2, 2), dtype=np.float64)
+    cov[:, 0, 0] = rx / 3.0
+    cov[:, 1, 1] = ry / 3.0
+
+    sigma = np.full(k_count, color_sigma, dtype=np.float64)
+
+    if strict_pseudocode_init:
+        nu = np.full((k_count, 3), 0.5, dtype=np.float64)
+    else:
+        nu = np.empty((k_count, 3), dtype=np.float64)
+
+        for k in range(k_count):
+            d = support_pos[k] - mu[k]
+            inv = np.linalg.inv(cov[k] + np.eye(2) * 1e-8)
+            logw = -0.5 * np.einsum("ij,jk,ik->i", d, inv, d)
+            w = np.exp(logw - logw.max())
+            w /= max(float(w.sum()), eps)
+            nu[k] = w @ support_col[k]
+
+    nbr4 = [_neighbors4(k, wo, ho) for k in range(k_count)]
+    nbr8 = [_neighbors8(k, wo, ho) for k in range(k_count)]
+
+    for _ in range(max_iter):
+        weights: list[np.ndarray] = []
+
+        for k in range(k_count):
+            p = support_pos[k]
+            c = support_col[k]
+
+            d = p - mu[k]
+            inv = np.linalg.inv(cov[k] + np.eye(2) * 1e-8)
+
+            spatial = -0.5 * np.einsum("ij,jk,ik->i", d, inv, d)
+
+            dc = c - nu[k]
+            chroma = -np.sum(dc * dc, axis=1) / (2.0 * sigma[k] * sigma[k])
+
+            logw = spatial + chroma
+            m = float(logw.max())
+
+            w = np.exp(logw - m) if np.isfinite(m) else np.ones_like(logw)
+            w /= max(float(w.sum()), eps)
+
+            weights.append(w)
+
+        denom = np.zeros(hi * wi, dtype=np.float64)
+
+        for s, w in zip(supports, weights, strict=True):
+            np.add.at(denom, s, w)
+
+        gamma = [w / np.maximum(denom[s], eps) for s, w in zip(supports, weights, strict=True)]
+
+        old_mu = mu.copy()
+        old_cov = cov.copy()
+        old_nu = nu.copy()
+        old_sigma = sigma.copy()
+
+        # M-step.
+        for k in range(k_count):
+            g = gamma[k]
+            gsum = float(g.sum())
+
+            if gsum <= 1e-12:
+                continue
+
+            p = support_pos[k]
+            c = support_col[k]
+
+            d_old = p - mu[k]
+            cov[k] = (d_old * g[:, None]).T @ d_old / gsum + np.eye(2) * 1e-8
+
+            mu[k] = (g[:, None] * p).sum(axis=0) / gsum
+            nu[k] = (g[:, None] * c).sum(axis=0) / gsum
+
+        # C-step 1: spatial mean smoothing and clampBox.
+        if spatial_constraints:
+            mu_bar = mu.copy()
+
+            for k in range(k_count):
+                if nbr4[k]:
+                    mu_bar[k] = mu[nbr4[k]].mean(axis=0)
+
+            mu = 0.5 * mu + 0.5 * mu_bar
+
+            mu[:, 0] = np.clip(
+                mu[:, 0],
+                centers[:, 0] - rx / 4.0,
+                centers[:, 0] + rx / 4.0,
+            )
+            mu[:, 1] = np.clip(
+                mu[:, 1],
+                centers[:, 1] - ry / 4.0,
+                centers[:, 1] + ry / 4.0,
+            )
+
+        # C-step 2: spatial covariance/eigenvalue clamp.
+        if variance_constraints:
+            for k in range(k_count):
+                vals, vecs = np.linalg.eigh(0.5 * (cov[k] + cov[k].T))
+
+                # Literal pseudocode values. They are in the paper's normalized
+                # working coordinate scale, but retained here for paper fidelity.
+                vals = np.clip(vals, 0.05, 0.10)
+
+                cov[k] = (vecs * vals) @ vecs.T + np.eye(2) * 1e-8
+                cov[k] = 0.5 * (cov[k] + cov[k].T)
+
+        # C-step 3: locality and staircase constraints.
+        # Both constraints increase sigma, making color kernels less restrictive
+        # on the next E-step.
+        if locality_constraint or staircase_constraint:
+            sigma_update = np.ones(k_count, dtype=np.float64)
+
+            mu_out = np.column_stack(
+                (
+                    mu[:, 0] / rx,
+                    mu[:, 1] / ry,
+                )
+            )
+
+            for k in range(k_count):
+                pk_out = np.column_stack(
+                    (
+                        support_pos[k][:, 0] / rx,
+                        support_pos[k][:, 1] / ry,
+                    )
+                )
+
+                gk = gamma[k]
+                idx_k = supports[k]
+
+                for n in nbr8[k]:
+                    direction = centers_out[n] - centers_out[k]
+                    trigger = False
+
+                    if locality_constraint:
+                        proj = (pk_out - mu_out[k]) @ direction
+                        locality_score = float(np.sum(gk * np.maximum(0.0, proj) ** 2))
+
+                        if locality_score > locality_threshold:
+                            trigger = True
+
+                    if staircase_constraint and not trigger:
+                        common, ia, ib = np.intersect1d(
+                            idx_k,
+                            supports[n],
+                            return_indices=True,
+                            assume_unique=True,
+                        )
+
+                        f = float(np.dot(gamma[k][ia], gamma[n][ib])) if common.size else 0.0
+
+                        if f < edge_strength_threshold:
+                            o = _edge_orientation_vector(
+                                k,
+                                n,
+                                supports=supports,
+                                gamma=gamma,
+                                wi=wi,
+                                hi=hi,
+                                rx=rx,
+                                ry=ry,
+                                eps=eps,
+                            )
+
+                            if _angle_degrees(direction, o) > 25.0:
+                                trigger = True
+
+                    if trigger:
+                        sigma_update[k] = max(sigma_update[k], 1.1)
+                        sigma_update[n] = max(sigma_update[n], 1.1)
+
+            sigma *= sigma_update
+
+        delta = max(
+            float(np.max(np.abs(mu - old_mu))),
+            float(np.max(np.abs(cov - old_cov))),
+            float(np.max(np.abs(nu - old_nu))),
+            float(np.max(np.abs(sigma - old_sigma))),
+        )
+
+        if delta < tol:
+            break
+
+    out_rgb = _lab01_to_rgb(nu.reshape(ho, wo, 3))
+    out_alpha = _resize_alpha(alpha, wo, ho)
+    return image_input.from_numpy(np.dstack([out_rgb, out_alpha]))
