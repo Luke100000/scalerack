@@ -193,6 +193,7 @@ def content_adaptive_downscale(
     locality_threshold: float | None = None,
     edge_strength_threshold: float | None = None,
 ) -> ImageInput:
+    """Downscale with detail-preserving content-adaptive kernels (Kopf et al. 2013)."""
     image_input = as_image_input(image)
     rgba = image_input.rgba().astype(np.float64)
     rgb = np.clip(rgba[:, :, :3], 0.0, 1.0)

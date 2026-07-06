@@ -89,6 +89,16 @@ Some algorithms may output different results depending on the fixed scale factor
 | `scale3x`<br>[Scale3x / EPX](https://www.scale2x.it/algorithm) | <img src="docs/previews/scale3x_upscale_photo.png" width="160"> | <img src="docs/previews/scale3x_upscale_sprite.png" width="144" style="image-rendering: pixelated;"> |
 | `scale4x`<br>[Scale4x / EPX](https://www.scale2x.it/algorithm) | <img src="docs/previews/scale4x_upscale_photo.png" width="160"> | <img src="docs/previews/scale4x_upscale_sprite.png" width="192" style="image-rendering: pixelated;"> |
 
+### Vectorizing scalers
+
+Vectorizing scalers reconstruct smooth resolution-independent region outlines before
+rasterizing at the target size, so they support arbitrary (non-integer) factors.
+
+| Algorithm                                                                                              | Photo reconstruction                                               | Sprite upscale                                                                                          |
+|----------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------|
+| Original                                                                                               | <img src="docs/samples/photo_upscale.jpg" width="160">             | <img src="docs/samples/sprite_upscale.png" width="48" style="image-rendering: pixelated;">              |
+| `depixelize`<br>[Depixelizing Pixel Art](https://johanneskopf.de/publications/pixelart/)               | <img src="docs/previews/depixelize_upscale_photo.png" width="160"> | <img src="docs/previews/depixelize_upscale_sprite.png" width="192" style="image-rendering: pixelated;"> |
+
 Sources: [Münster market](https://commons.wikimedia.org/wiki/File:M%C3%BCnster,_Wochenmarkt_--_2017_--_2333.jpg),
 [macaw](https://commons.wikimedia.org/wiki/File%3AMacaw_parrot_%28Unsplash%29.jpg),
 and [Pixelart TV](https://commons.wikimedia.org/wiki/File:Pixelart-tv-iso.png), via Wikimedia Commons.
@@ -105,7 +115,7 @@ and [Pixelart TV](https://commons.wikimedia.org/wiki/File:Pixelart-tv-iso.png), 
 | EASU / RCAS (FSR 1 core, CPU)                                                       | extended  | ⬜ to be implemented |
 | EWA / Jinc (elliptical weighted average)                                            | extended  | ⬜ to be implemented |
 | Gamma-correct (linear-light) resampling                                             | extended  | ⬜ to be implemented |
-| Depixelizing Pixel Art (vectorizing)                                                | research  | ⬜ to be implemented |
+| Depixelizing Pixel Art (vectorizing)                                                | research  | ✅ implemented       |
 | Content-adaptive downscaling                                                        | research  | ✅ implemented       |
 | Perceptual / spectral downscaling                                                   | research  | ⬜ to be implemented |
 | Eagle, 2xSaI, SuperEagle, SABR (legacy retro)                                       | contrib   | ⬜ to be implemented |
