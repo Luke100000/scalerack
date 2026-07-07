@@ -3,7 +3,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-from PIL import Image
+from PIL import Image, ImageChops
 
 import scalerack
 
@@ -64,7 +64,25 @@ def classify_resize(source: Image.Image, result: Image.Image) -> str | None:
     return None
 
 
+MAX_UNCHANGED_CHANNEL_DIFFERENCE = 1
+
+
+def differs_from_existing(image: Image.Image, path: Path) -> bool:
+    if not path.exists():
+        return True
+    with Image.open(path) as existing:
+        existing = existing.convert(image.mode)
+        if existing.size != image.size:
+            return True
+        difference = ImageChops.difference(image, existing)
+    max_channel_difference = max(band_maximum for _, band_maximum in difference.getextrema())
+    return max_channel_difference > MAX_UNCHANGED_CHANNEL_DIFFERENCE
+
+
 def save_preview(image: Image.Image, path: Path) -> None:
+    if not differs_from_existing(image, path):
+        print(f"skipped {path.relative_to(DOCS_DIRECTORY.parent)} (unchanged)")
+        return
     path.parent.mkdir(parents=True, exist_ok=True)
     image.save(path)
     print(f"wrote {path.relative_to(DOCS_DIRECTORY.parent)}")
