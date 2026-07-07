@@ -48,6 +48,7 @@ dev = [
     "scikit-image>=0.24",
     "cyclopts>=3",
     "pre-commit>=4",
+    "tqdm>=4.66",
 ]
 
 [tool.ruff]
