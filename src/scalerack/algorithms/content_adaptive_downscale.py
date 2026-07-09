@@ -187,13 +187,24 @@ def content_adaptive_downscale(
     spatial_constraints: bool = True,
     variance_constraints: bool = True,
     max_iter: int = 30,
-    color_sigma: float = 0.04,
+    color_sigma: float = 1e-4,
     tol: float = 5e-4,
     strict_pseudocode_init: bool = False,
     locality_threshold: float | None = None,
     edge_strength_threshold: float | None = None,
+    variance_bounds: tuple[float, float] = (0.05, 0.10),
 ) -> ImageInput:
-    """Downscale with detail-preserving content-adaptive kernels (Kopf et al. 2013)."""
+    """Downscale with detail-preserving content-adaptive kernels (Kopf et al. 2013).
+
+    Each output pixel is a bilateral Gaussian kernel in joint space/color, fit by
+    EM. Kernels start color-crisp; the locality and staircase constraints
+    selectively smooth misbehaving kernels by raising their color variance.
+    For the paper's pixel-art mode pass ``staircase_constraint=False``.
+
+    Sharpness accumulates with iterations; the ``max_iter`` default is calibrated
+    to reproduce the sharpness of the paper's published results (running to full
+    convergence over-sharpens). Pixel art converges early on its own.
+    """
     image_input = as_image_input(image)
     rgba = image_input.rgba().astype(np.float64)
     rgb = np.clip(rgba[:, :, :3], 0.0, 1.0)
@@ -218,10 +229,14 @@ def content_adaptive_downscale(
     ry = hi / ho
 
     if locality_threshold is None:
-        locality_threshold = 0.2 * rx
+        # Paper: 0.2*rx on an unnormalized sum; our score is mass-normalized,
+        # constant recalibrated against the paper's reference outputs.
+        locality_threshold = 0.25 * rx
 
     if edge_strength_threshold is None:
-        edge_strength_threshold = 0.08 * rx * ry
+        # Paper text says 0.08*rx*ry, but that gate never releases; the
+        # pseudocode's plain 0.08 self-limits.
+        edge_strength_threshold = 0.08
 
     lab = _rgb_to_lab01(rgb)
     colors = lab.reshape(-1, 3)
@@ -287,6 +302,22 @@ def content_adaptive_downscale(
     nbr4 = [_neighbors4(k, wo, ho) for k in range(k_count)]
     nbr8 = [_neighbors8(k, wo, ho) for k in range(k_count)]
 
+    # Supports are static, so per-pair overlaps are precomputed once.
+    overlap: dict[tuple[int, int], tuple[np.ndarray, np.ndarray]] = {}
+
+    if staircase_constraint:
+        for k in range(k_count):
+            for n in nbr8[k]:
+                if k < n:
+                    _, ia, ib = np.intersect1d(
+                        supports[k],
+                        supports[n],
+                        return_indices=True,
+                        assume_unique=True,
+                    )
+                    overlap[(k, n)] = (ia.astype(np.int32), ib.astype(np.int32))
+                    overlap[(n, k)] = (overlap[(k, n)][1], overlap[(k, n)][0])
+
     for _ in range(max_iter):
         weights: list[np.ndarray] = []
 
@@ -317,10 +348,7 @@ def content_adaptive_downscale(
 
         gamma = [w / np.maximum(denom[s], eps) for s, w in zip(supports, weights, strict=True)]
 
-        old_mu = mu.copy()
-        old_cov = cov.copy()
         old_nu = nu.copy()
-        old_sigma = sigma.copy()
 
         # M-step.
         for k in range(k_count):
@@ -362,19 +390,24 @@ def content_adaptive_downscale(
 
         # C-step 2: spatial covariance/eigenvalue clamp.
         if variance_constraints:
+            # Clamped in output-pixel units; the paper's literal input-unit
+            # clamp would collapse every kernel to a sub-pixel point.
+            d_axes = np.array([rx, ry], dtype=np.float64)
+            scale = np.outer(d_axes, d_axes)
+
             for k in range(k_count):
-                vals, vecs = np.linalg.eigh(0.5 * (cov[k] + cov[k].T))
+                cov_norm = 0.5 * (cov[k] + cov[k].T) / scale
+                vals, vecs = np.linalg.eigh(cov_norm)
+                vals = np.clip(vals, variance_bounds[0], variance_bounds[1])
+                cov_norm = (vecs * vals) @ vecs.T
 
-                # Literal pseudocode values. They are in the paper's normalized
-                # working coordinate scale, but retained here for paper fidelity.
-                vals = np.clip(vals, 0.05, 0.10)
-
-                cov[k] = (vecs * vals) @ vecs.T + np.eye(2) * 1e-8
+                cov[k] = cov_norm * scale + np.eye(2) * 1e-8
                 cov[k] = 0.5 * (cov[k] + cov[k].T)
 
-        # C-step 3: locality and staircase constraints.
-        # Both constraints increase sigma, making color kernels less restrictive
-        # on the next E-step.
+        # C-step 3: locality and staircase constraints; both smooth violating
+        # kernels by raising sigma, and taper off once kernels comply.
+        constraints_triggered = False
+
         if locality_constraint or staircase_constraint:
             sigma_update = np.ones(k_count, dtype=np.float64)
 
@@ -394,28 +427,29 @@ def content_adaptive_downscale(
                 )
 
                 gk = gamma[k]
-                idx_k = supports[k]
 
                 for n in nbr8[k]:
                     direction = centers_out[n] - centers_out[k]
                     trigger = False
 
                     if locality_constraint:
+                        # Directional variance toward the neighbor, normalized
+                        # by kernel mass (paper's sum is unnormalized and would
+                        # fire on every kernel).
                         proj = (pk_out - mu_out[k]) @ direction
-                        locality_score = float(np.sum(gk * np.maximum(0.0, proj) ** 2))
+                        gk_sum = float(gk.sum())
+                        locality_score = (
+                            float(np.sum(gk * np.maximum(0.0, proj) ** 2)) / gk_sum
+                            if gk_sum > eps
+                            else 0.0
+                        )
 
                         if locality_score > locality_threshold:
                             trigger = True
 
                     if staircase_constraint and not trigger:
-                        common, ia, ib = np.intersect1d(
-                            idx_k,
-                            supports[n],
-                            return_indices=True,
-                            assume_unique=True,
-                        )
-
-                        f = float(np.dot(gamma[k][ia], gamma[n][ib])) if common.size else 0.0
+                        ia, ib = overlap[(k, n)]
+                        f = float(np.dot(gamma[k][ia], gamma[n][ib])) if ia.size else 0.0
 
                         if f < edge_strength_threshold:
                             o = _edge_orientation_vector(
@@ -438,15 +472,11 @@ def content_adaptive_downscale(
                         sigma_update[n] = max(sigma_update[n], 1.1)
 
             sigma *= sigma_update
+            constraints_triggered = bool(np.any(sigma_update > 1.0))
 
-        delta = max(
-            float(np.max(np.abs(mu - old_mu))),
-            float(np.max(np.abs(cov - old_cov))),
-            float(np.max(np.abs(nu - old_nu))),
-            float(np.max(np.abs(sigma - old_sigma))),
-        )
+        nu_delta = float(np.max(np.abs(nu - old_nu)))
 
-        if delta < tol:
+        if nu_delta < tol and not constraints_triggered:
             break
 
     out_rgb = _lab01_to_rgb(nu.reshape(ho, wo, 3))
