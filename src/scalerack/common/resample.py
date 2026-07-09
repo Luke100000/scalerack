@@ -2,8 +2,8 @@ from collections.abc import Callable
 
 import numpy as np
 
+from scalerack.common.kernels import Kernel
 from scalerack.image_io import ImageInput, as_image_input
-from scalerack.kernels import Kernel
 
 ComputeFunction = Callable[[np.ndarray, int, int], np.ndarray]
 

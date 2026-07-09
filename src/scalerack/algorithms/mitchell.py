@@ -1,7 +1,7 @@
 from scalerack.algorithms.registry import register
+from scalerack.common.kernels import make_bc_spline_kernel
+from scalerack.common.resample import resample_with_kernel
 from scalerack.image_io import ImageInput
-from scalerack.kernels import make_bc_spline_kernel
-from scalerack.resample import resample_with_kernel
 
 
 @register
