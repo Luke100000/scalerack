@@ -136,7 +136,7 @@ def render_callable(name: str, function: object) -> str:
     if doc.description:
         parts.extend(["", doc.description])
     parts.extend(["", render_parameters(function, doc)])
-    parts.extend(["", "---", ""])
+    parts.extend(["", "---", "", "<br />"])
     return "\n".join(parts)
 
 
