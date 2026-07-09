@@ -134,6 +134,11 @@ uv run pre-commit install                   # ruff check + format on commit
 uv run pytest                               # smoke suite
 uv run mypy src                             # type check
 uv run python scripts/generate_previews.py  # regenerate the gallery above
+uv run python scripts/generate_docs.py      # regenerate docs/index.md
+
+cd docs
+bundle config set path vendor/bundle && bundle install
+bundle exec jekyll serve --source . --destination _site # --host 127.0.0.1 --port 4000
 ```
 
 ## License

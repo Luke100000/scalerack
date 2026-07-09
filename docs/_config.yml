@@ -1,0 +1,10 @@
+title: Scalerack
+description: Python image resizing, resampling, downscaling, and pixel-art upscaling API reference.
+theme: minima
+markdown: kramdown
+highlighter: rouge
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+exclude:
+  - _site
