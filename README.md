@@ -90,7 +90,9 @@ Some algorithms may output different results depending on the fixed scale factor
 | `scale4x`<br>[Scale4x / EPX](https://www.scale2x.it/algorithm) | <img src="https://raw.githubusercontent.com/Luke100000/scalerack/master/docs/previews/scale4x_upscale_photo.png" width="160"> | <img src="https://raw.githubusercontent.com/Luke100000/scalerack/master/docs/previews/scale4x_upscale_sprite.png" width="192" style="image-rendering: pixelated;"> |
 | `eagle2x`<br>[Eagle](https://en.wikipedia.org/wiki/Pixel-art_scaling_algorithms#Eagle) | <img src="https://raw.githubusercontent.com/Luke100000/scalerack/master/docs/previews/eagle2x_upscale_photo.png" width="160"> | <img src="https://raw.githubusercontent.com/Luke100000/scalerack/master/docs/previews/eagle2x_upscale_sprite.png" width="96" style="image-rendering: pixelated;">  |
 | `eagle3x`<br>[Eagle 3x](https://en.wikipedia.org/wiki/Pixel-art_scaling_algorithms#Eagle)<br>(community 3x extension of Eagle) | <img src="https://raw.githubusercontent.com/Luke100000/scalerack/master/docs/previews/eagle3x_upscale_photo.png" width="160"> | <img src="https://raw.githubusercontent.com/Luke100000/scalerack/master/docs/previews/eagle3x_upscale_sprite.png" width="144" style="image-rendering: pixelated;"> |
+| `sai2x`<br>[2xSaI](https://en.wikipedia.org/wiki/Pixel-art_scaling_algorithms#2%C3%97SaI)<br>(Derek "Kreed" Liauw Kie Fa, 1999) | <img src="https://raw.githubusercontent.com/Luke100000/scalerack/master/docs/previews/sai2x_upscale_photo.png" width="160"> | <img src="https://raw.githubusercontent.com/Luke100000/scalerack/master/docs/previews/sai2x_upscale_sprite.png" width="96" style="image-rendering: pixelated;">  |
 | `supereagle`<br>[SuperEagle](https://en.wikipedia.org/wiki/Pixel-art_scaling_algorithms#2%C3%97SaI)<br>(Derek "Kreed" Liauw Kie Fa, 1999) | <img src="https://raw.githubusercontent.com/Luke100000/scalerack/master/docs/previews/supereagle_upscale_photo.png" width="160"> | <img src="https://raw.githubusercontent.com/Luke100000/scalerack/master/docs/previews/supereagle_upscale_sprite.png" width="96" style="image-rendering: pixelated;">  |
+| `super2xsai`<br>[Super 2xSaI](https://en.wikipedia.org/wiki/Pixel-art_scaling_algorithms#2%C3%97SaI)<br>(Derek "Kreed" Liauw Kie Fa, 1999) | <img src="https://raw.githubusercontent.com/Luke100000/scalerack/master/docs/previews/super2xsai_upscale_photo.png" width="160"> | <img src="https://raw.githubusercontent.com/Luke100000/scalerack/master/docs/previews/super2xsai_upscale_sprite.png" width="96" style="image-rendering: pixelated;">  |
 
 ### Vectorizing scalers
 
@@ -117,7 +119,7 @@ and [Pixelart TV](https://commons.wikimedia.org/wiki/File:Pixelart-tv-iso.png), 
 | EWA / Jinc (elliptical weighted average) | extended  |
 | Gamma-correct (linear-light) resampling  | extended  |
 | Perceptual / spectral downscaling        | research  |
-| 2xSaI, SABR (legacy retro)               | contrib   |
+| SABR (legacy retro)                      | contrib   |
 
 Machine-learning upscalers are out of scope.
 

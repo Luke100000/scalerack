@@ -15,7 +15,7 @@ from scalerack.algorithms.magic_kernel_sharp import magic_kernel_sharp
 from scalerack.algorithms.mitchell import mitchell
 from scalerack.algorithms.nearest import nearest
 from scalerack.algorithms.registry import ALGORITHMS
-from scalerack.algorithms.supereagle import supereagle
+from scalerack.algorithms.sai import sai2x, super2xsai, supereagle
 from scalerack.exceptions import (
     InvalidFactorError,
     ScalerackError,
@@ -46,9 +46,11 @@ __all__ = [
     "mitchell",
     "nearest",
     "resize",
+    "sai2x",
     "scale2x",
     "scale3x",
     "scale4x",
+    "super2xsai",
     "supereagle",
 ]
 
