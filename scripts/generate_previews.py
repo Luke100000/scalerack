@@ -1,13 +1,15 @@
 import inspect
-import sys
 from dataclasses import dataclass
 from os import cpu_count
 from pathlib import Path
 
+import cyclopts
 from PIL import Image, ImageChops
 from tqdm.contrib.concurrent import process_map
 
 import scalerack
+
+app = cyclopts.App(name="generate_previews", version=scalerack.__version__)
 
 DOCS_DIRECTORY = Path(__file__).resolve().parent.parent / "docs"
 SAMPLES_DIRECTORY = DOCS_DIRECTORY / "samples"
@@ -16,6 +18,9 @@ PREVIEWS_DIRECTORY = DOCS_DIRECTORY / "previews"
 DOWNSCALE_FACTOR = 0.25
 UPSCALE_FACTOR = 4
 RECONSTRUCTION_DOWNSCALER = "lanczos"
+
+# Regenerated only when missing, unless --slow is passed.
+SLOW_ALGORITHMS = frozenset({"content_adaptive_downscale"})
 
 
 @dataclass(frozen=True)
@@ -101,15 +106,28 @@ class PreviewJob:
     task: PreviewTask
 
 
-def build_jobs() -> list[PreviewJob]:
+def expected_output_path(name: str, task: PreviewTask) -> Path:
+    direction = "downscale" if task.factor < 1 else "upscale"
+    return PREVIEWS_DIRECTORY / f"{name}_{direction}_{task.name}.png"
+
+
+def build_jobs(include_slow: bool) -> tuple[list[PreviewJob], int]:
     jobs: list[PreviewJob] = []
+    skipped_slow = 0
     for name in scalerack.ALGORITHMS:
         has_factor = accepts_factor(name)
         for task in PREVIEW_TASKS:
             if not has_factor and task.factor < 1:
                 continue
+            if (
+                name in SLOW_ALGORITHMS
+                and not include_slow
+                and expected_output_path(name, task).exists()
+            ):
+                skipped_slow += 1
+                continue
             jobs.append(PreviewJob(name, task))
-    return jobs
+    return jobs, skipped_slow
 
 
 def render_preview(job: PreviewJob) -> str | None:
@@ -132,21 +150,28 @@ def render_preview(job: PreviewJob) -> str | None:
     )
 
 
-def generate_algorithm_previews() -> None:
-    jobs = build_jobs()
+def generate_algorithm_previews(include_slow: bool) -> None:
+    jobs, skipped_slow = build_jobs(include_slow)
     messages = process_map(
         render_preview, jobs, desc="rendering previews", chunksize=1, max_workers=cpu_count()
     )
     for message in messages:
         if message is not None:
             print(message)
+    if skipped_slow:
+        print(f"skipped {skipped_slow} existing slow previews (pass --slow to regenerate)")
 
 
-def main() -> int:
-    generate_algorithm_previews()
+@app.default
+def main(*, slow: bool = False) -> None:
+    """Generate algorithm preview images.
+
+    Args:
+        slow: Also regenerate previews of slow algorithms that already exist.
+    """
+    generate_algorithm_previews(include_slow=slow)
     print(f"previews complete for {len(scalerack.ALGORITHMS)} algorithms")
-    return 0
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    app()
