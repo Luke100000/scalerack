@@ -88,6 +88,9 @@ Some algorithms may output different results depending on the fixed scale factor
 | `scale2x`<br>[Scale2x / EPX](https://www.scale2x.it/algorithm) | <img src="https://raw.githubusercontent.com/Luke100000/scalerack/master/docs/previews/scale2x_upscale_photo.png" width="160"> | <img src="https://raw.githubusercontent.com/Luke100000/scalerack/master/docs/previews/scale2x_upscale_sprite.png" width="96" style="image-rendering: pixelated;">  |
 | `scale3x`<br>[Scale3x / EPX](https://www.scale2x.it/algorithm) | <img src="https://raw.githubusercontent.com/Luke100000/scalerack/master/docs/previews/scale3x_upscale_photo.png" width="160"> | <img src="https://raw.githubusercontent.com/Luke100000/scalerack/master/docs/previews/scale3x_upscale_sprite.png" width="144" style="image-rendering: pixelated;"> |
 | `scale4x`<br>[Scale4x / EPX](https://www.scale2x.it/algorithm) | <img src="https://raw.githubusercontent.com/Luke100000/scalerack/master/docs/previews/scale4x_upscale_photo.png" width="160"> | <img src="https://raw.githubusercontent.com/Luke100000/scalerack/master/docs/previews/scale4x_upscale_sprite.png" width="192" style="image-rendering: pixelated;"> |
+| `eagle2x`<br>[Eagle](https://en.wikipedia.org/wiki/Pixel-art_scaling_algorithms#Eagle) | <img src="https://raw.githubusercontent.com/Luke100000/scalerack/master/docs/previews/eagle2x_upscale_photo.png" width="160"> | <img src="https://raw.githubusercontent.com/Luke100000/scalerack/master/docs/previews/eagle2x_upscale_sprite.png" width="96" style="image-rendering: pixelated;">  |
+| `eagle3x`<br>[Eagle 3x](https://en.wikipedia.org/wiki/Pixel-art_scaling_algorithms#Eagle)<br>(community 3x extension of Eagle) | <img src="https://raw.githubusercontent.com/Luke100000/scalerack/master/docs/previews/eagle3x_upscale_photo.png" width="160"> | <img src="https://raw.githubusercontent.com/Luke100000/scalerack/master/docs/previews/eagle3x_upscale_sprite.png" width="144" style="image-rendering: pixelated;"> |
+| `supereagle`<br>[SuperEagle](https://en.wikipedia.org/wiki/Pixel-art_scaling_algorithms#2%C3%97SaI)<br>(Derek "Kreed" Liauw Kie Fa, 1999) | <img src="https://raw.githubusercontent.com/Luke100000/scalerack/master/docs/previews/supereagle_upscale_photo.png" width="160"> | <img src="https://raw.githubusercontent.com/Luke100000/scalerack/master/docs/previews/supereagle_upscale_sprite.png" width="96" style="image-rendering: pixelated;">  |
 
 ### Vectorizing scalers
 
@@ -105,20 +108,16 @@ and [Pixelart TV](https://commons.wikimedia.org/wiki/File:Pixelart-tv-iso.png), 
 
 ## Roadmap
 
-| Algorithm                                                                           | Family    | Status              |
-|-------------------------------------------------------------------------------------|-----------|---------------------|
-| nearest, box, bilinear, bicubic, mitchell, catmull_rom, lanczos, magic_kernel_sharp | classical | ✅ implemented       |
-| scale2x / scale3x / scale4x (EPX)                                                   | pixel-art | ✅ implemented       |
-| hq2x / hq3x / hq4x                                                                  | pixel-art | ⬜ to be implemented |
-| xBRZ (2x-6x)                                                                        | pixel-art | ⬜ to be implemented |
-| super-xBR                                                                           | pixel-art | ⬜ to be implemented |
-| EASU / RCAS (FSR 1 core, CPU)                                                       | extended  | ⬜ to be implemented |
-| EWA / Jinc (elliptical weighted average)                                            | extended  | ⬜ to be implemented |
-| Gamma-correct (linear-light) resampling                                             | extended  | ⬜ to be implemented |
-| Depixelizing Pixel Art (vectorizing)                                                | research  | ✅ implemented       |
-| Content-adaptive downscaling                                                        | research  | ✅ implemented       |
-| Perceptual / spectral downscaling                                                   | research  | ⬜ to be implemented |
-| Eagle, 2xSaI, SuperEagle, SABR (legacy retro)                                       | contrib   | ⬜ to be implemented |
+| Algorithm                                | Family    |
+|------------------------------------------|-----------|
+| hq2x / hq3x / hq4x                       | pixel-art |
+| xBRZ (2x-6x)                             | pixel-art |
+| super-xBR                                | pixel-art |
+| EASU / RCAS (FSR 1 core, CPU)            | extended  |
+| EWA / Jinc (elliptical weighted average) | extended  |
+| Gamma-correct (linear-light) resampling  | extended  |
+| Perceptual / spectral downscaling        | research  |
+| 2xSaI, SABR (legacy retro)               | contrib   |
 
 Machine-learning upscalers are out of scope.
 

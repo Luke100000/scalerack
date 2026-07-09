@@ -10,9 +10,12 @@ CLASSICAL_SMOKE_FACTOR = 1.7
 SMOKE_FACTORS = {
     "content_adaptive_downscale": 0.5,
     "depixelize": 4.0,
+    "eagle2x": 2.0,
+    "eagle3x": 3.0,
     "scale2x": 2.0,
     "scale3x": 3.0,
     "scale4x": 4.0,
+    "supereagle": 2.0,
 }
 
 

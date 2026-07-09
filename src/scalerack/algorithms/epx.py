@@ -30,7 +30,7 @@ def scale4x(image: ImageInput) -> ImageInput:
 
 
 def expand_scale2x(values: np.ndarray) -> np.ndarray:
-    """Apply the Scale2x rules once, mapping (H, W, C) to (2H, 2W, C)."""
+    """Apply the Scale2x rules once."""
     height, width, channels = values.shape
     center = values
     up, down, left, right = extract_edge_neighbors(values)
@@ -54,7 +54,7 @@ def expand_scale2x(values: np.ndarray) -> np.ndarray:
 
 
 def expand_scale3x(values: np.ndarray) -> np.ndarray:
-    """Apply the Scale3x rules once, mapping (H, W, C) to (3H, 3W, C)."""
+    """Apply the Scale3x rules once."""
     height, width, channels = values.shape
     center = values
     up, down, left, right = extract_edge_neighbors(values)

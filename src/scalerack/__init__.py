@@ -8,12 +8,14 @@ from scalerack.algorithms.box import box
 from scalerack.algorithms.catmull_rom import catmull_rom
 from scalerack.algorithms.content_adaptive_downscale import content_adaptive_downscale
 from scalerack.algorithms.depixelize import depixelize
+from scalerack.algorithms.eagle import eagle2x, eagle3x
 from scalerack.algorithms.epx import scale2x, scale3x, scale4x
 from scalerack.algorithms.lanczos import lanczos
 from scalerack.algorithms.magic_kernel_sharp import magic_kernel_sharp
 from scalerack.algorithms.mitchell import mitchell
 from scalerack.algorithms.nearest import nearest
 from scalerack.algorithms.registry import ALGORITHMS
+from scalerack.algorithms.supereagle import supereagle
 from scalerack.exceptions import (
     InvalidFactorError,
     ScalerackError,
@@ -37,6 +39,8 @@ __all__ = [
     "catmull_rom",
     "content_adaptive_downscale",
     "depixelize",
+    "eagle2x",
+    "eagle3x",
     "lanczos",
     "magic_kernel_sharp",
     "mitchell",
@@ -45,6 +49,7 @@ __all__ = [
     "scale2x",
     "scale3x",
     "scale4x",
+    "supereagle",
 ]
 
 try:
