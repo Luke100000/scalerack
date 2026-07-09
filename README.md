@@ -2,9 +2,12 @@
 
 [![PyPI version](https://img.shields.io/pypi/v/scalerack.svg)](https://pypi.org/project/scalerack/)
 
-Many image up- and downscaling algorithms behind one unified interface: classical kernel resampling, edge-aware
-reconstruction for crisp low-resolution art, vectorizing and perceptual downscaling approaches. Whatever goes in
-comes back out in the same format:
+Scalerack is a Python image resizing, resampling, upscaling, downscaling, and pixel-art scaling library with a CLI. It
+offers many image scaling algorithms through one unified interface, supports NumPy arrays and Pillow images, and
+preserves the input format on output. Included methods range from classical filters such as nearest, box, bilinear,
+bicubic, Mitchell, Catmull-Rom, Lanczos, Magic Kernel Sharp, and EWA/Jinc to gamma-correct resampling, edge-aware
+pixel-art scalers such as Scale2x/3x/4x, hq2x/hq3x/hq4x, xBRZ, super-xBR, EASU/RCAS, depixelization, vectorizing, Seam
+Carving, and perceptual downscaling with L0 Gradient Minimization.
 
 - NumPy arrays: `(H, W)`, `(H, W, 3)`, `(H, W, 4)` in `uint8`, `float32`, `float64`
 - Pillow images: `L`, `RGB`, `RGBA`

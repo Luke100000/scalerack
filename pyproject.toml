@@ -5,16 +5,34 @@ build-backend = "uv_build"
 [project]
 name = "scalerack"
 version = "0.1.2"
-description = "Classical and pixel-art image up/downscaling algorithms behind one consistent interface."
+description = "Python image resizing, resampling, downscaling, and pixel-art upscaling library and CLI."
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
 authors = [{ name = "Luke100000" }]
 requires-python = ">=3.11"
 dependencies = ["numpy>=1.26"]
-keywords = ["image", "scaling", "resampling", "resize", "pixel-art", "lanczos", "scale2x"]
+keywords = [
+    "image",
+    "image-processing",
+    "image-resize",
+    "image-resizing",
+    "image-scaling",
+    "resampling",
+    "upscaling",
+    "downscaling",
+    "pixel-art",
+    "pixel-art-scaler",
+    "lanczos",
+    "mitchell",
+    "catmull-rom",
+    "scale2x",
+    "pillow",
+    "numpy",
+]
 classifiers = [
     "Development Status :: 4 - Beta",
+    "Environment :: Console",
     "Intended Audience :: Developers",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
@@ -22,6 +40,8 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Topic :: Multimedia :: Graphics",
+    "Topic :: Multimedia :: Graphics :: Graphics Conversion",
+    "Topic :: Scientific/Engineering :: Image Processing",
     "Typing :: Typed",
 ]
 
