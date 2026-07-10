@@ -56,6 +56,7 @@ scalerack list
 ## Algorithms
 
 Check the code documentation for algorithm details.
+Named methods link to their original work where available.
 
 ### Classical resamplers
 
@@ -110,9 +111,13 @@ rasterizing at the target size, so they support arbitrary (non-integer) factors.
 | Original                                                                                 | <img src="https://raw.githubusercontent.com/Luke100000/scalerack/master/docs/samples/photo_upscale.jpg" width="160">             | <img src="https://raw.githubusercontent.com/Luke100000/scalerack/master/docs/samples/sprite_upscale.png" width="48" style="image-rendering: pixelated;">              |
 | `depixelize`<br>[Depixelizing Pixel Art](https://johanneskopf.de/publications/pixelart/) | <img src="https://raw.githubusercontent.com/Luke100000/scalerack/master/docs/previews/depixelize_upscale_photo.png" width="160"> | <img src="https://raw.githubusercontent.com/Luke100000/scalerack/master/docs/previews/depixelize_upscale_sprite.png" width="192" style="image-rendering: pixelated;"> |
 
-Sources: [Münster market](https://commons.wikimedia.org/wiki/File:M%C3%BCnster,_Wochenmarkt_--_2017_--_2333.jpg),
-[macaw](https://commons.wikimedia.org/wiki/File%3AMacaw_parrot_%28Unsplash%29.jpg),
-and [Pixelart TV](https://commons.wikimedia.org/wiki/File:Pixelart-tv-iso.png), via Wikimedia Commons.
+Gallery sources: Dietmar
+Rabich's [Münster market](https://commons.wikimedia.org/wiki/File:M%C3%BCnster,_Wochenmarkt_--_2017_--_2333.jpg)
+([CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)), Andrew Pons's
+[macaw](https://commons.wikimedia.org/wiki/File%3AMacaw_parrot_%28Unsplash%29.jpg)
+([CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/)), and LucasVB's
+[Pixelart TV](https://commons.wikimedia.org/wiki/File:Pixelart-tv-iso.png)
+([CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/)), via Wikimedia Commons.
 
 ## Roadmap
 
@@ -146,4 +151,10 @@ bundle exec jekyll serve --source . --destination _site # --host 127.0.0.1 --por
 
 ## License
 
-[MIT](LICENSE). All bundled algorithms are implemented from scratch from their specifications or papers.
+Scalerack's current source tree is licensed under the [Mozilla Public License 2.0](LICENSE).
+
+The implementations are best-effort expressions based on the cited public descriptions,
+specifications, and papers, with credit to original authors and work wherever possible.
+Common technical elements such as kernels, coefficients, thresholds, and lookup tables may
+also appear in other implementations, including implementations available under different
+licenses; MPL-2.0 applies to the contributions and rights Scalerack's contributors can grant.

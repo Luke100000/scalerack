@@ -2,9 +2,10 @@
 
 Notable Scalerack changes.
 
-## TDP
+## Unreleased
 
 - Added changelog.
+- Changed license to MPL-2.0
 
 ## 0.1.2 - 08.07.2026
 
