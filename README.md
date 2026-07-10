@@ -1,10 +1,10 @@
 # Scalerack
 
-![PyPI](https://img.shields.io/pypi/v/scalerack)
-![Python](https://img.shields.io/pypi/pyversions/scalerack)
-![License](https://img.shields.io/pypi/l/scalerack)
+[![PyPI](https://img.shields.io/pypi/v/scalerack)](https://pypi.org/project/scalerack/)
+[![Python](https://img.shields.io/pypi/pyversions/scalerack)](https://www.python.org/)
+[![License](https://img.shields.io/pypi/l/scalerack)](LICENSE)
 [![Tests](https://github.com/Luke100000/scalerack/actions/workflows/ci.yml/badge.svg)](https://github.com/Luke100000/scalerack/actions/workflows/ci.yml)
-![Typing](https://img.shields.io/badge/typing-typed-blue)
+[![Typing](https://img.shields.io/badge/typing-typed-blue)](https://typing.python.org/en/latest/spec/distributing.html)
 [![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-222222?logo=github)](https://luke100000.github.io/scalerack/)
 
 Scalerack is a Python image resizing, resampling, upscaling, downscaling, and pixel-art scaling library with a CLI. It
@@ -122,7 +122,9 @@ Rabich's [Münster market](https://commons.wikimedia.org/wiki/File:M%C3%BCnster,
 [macaw](https://commons.wikimedia.org/wiki/File%3AMacaw_parrot_%28Unsplash%29.jpg)
 ([CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/)), and LucasVB's
 [Pixelart TV](https://commons.wikimedia.org/wiki/File:Pixelart-tv-iso.png)
-([CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/)), via Wikimedia Commons.
+([CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/)), and the
+[pixel-art scaling comparison](https://en.wikipedia.org/wiki/Pixel-art_scaling_algorithms#/media/File:Test_nn.png),
+via Wikimedia Commons.
 
 ## Roadmap
 
