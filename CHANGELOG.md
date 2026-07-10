@@ -2,7 +2,7 @@
 
 Notable Scalerack changes.
 
-## Unreleased
+## 0.2.0 - 10.07.2026
 
 - Added the hqx family (hq2x, hq3x, hq4x).
 - Added xBRZ (factors 2-6).
