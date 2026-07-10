@@ -4,6 +4,9 @@ Notable Scalerack changes.
 
 ## Unreleased
 
+- Added the hqx family (hq2x, hq3x, hq4x).
+- Added xBRZ (factors 2-6).
+- Added Super xBR.
 - Added changelog.
 - Changed license to MPL-2.0
 

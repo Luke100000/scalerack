@@ -100,6 +100,11 @@ Some algorithms may output different results depending on the fixed scale factor
 | `sai2x`<br>[2xSaI](https://en.wikipedia.org/wiki/Pixel-art_scaling_algorithms#2%C3%97SaI)<br>(Derek "Kreed" Liauw Kie Fa, 1999)            | <img src="https://raw.githubusercontent.com/Luke100000/scalerack/master/docs/previews/sai2x_upscale_photo.png" width="160">      | <img src="https://raw.githubusercontent.com/Luke100000/scalerack/master/docs/previews/sai2x_upscale_sprite.png" width="96" style="image-rendering: pixelated;">      |
 | `supereagle`<br>[SuperEagle](https://en.wikipedia.org/wiki/Pixel-art_scaling_algorithms#2%C3%97SaI)<br>(Derek "Kreed" Liauw Kie Fa, 1999)  | <img src="https://raw.githubusercontent.com/Luke100000/scalerack/master/docs/previews/supereagle_upscale_photo.png" width="160"> | <img src="https://raw.githubusercontent.com/Luke100000/scalerack/master/docs/previews/supereagle_upscale_sprite.png" width="96" style="image-rendering: pixelated;"> |
 | `super2xsai`<br>[Super 2xSaI](https://en.wikipedia.org/wiki/Pixel-art_scaling_algorithms#2%C3%97SaI)<br>(Derek "Kreed" Liauw Kie Fa, 1999) | <img src="https://raw.githubusercontent.com/Luke100000/scalerack/master/docs/previews/super2xsai_upscale_photo.png" width="160"> | <img src="https://raw.githubusercontent.com/Luke100000/scalerack/master/docs/previews/super2xsai_upscale_sprite.png" width="96" style="image-rendering: pixelated;"> |
+| `hq2x`<br>[hq2x](https://en.wikipedia.org/wiki/Hqx_(algorithm))<br>(Maxim Stepin, 2003)                                                    | <img src="https://raw.githubusercontent.com/Luke100000/scalerack/master/docs/previews/hq2x_upscale_photo.png" width="160">       | <img src="https://raw.githubusercontent.com/Luke100000/scalerack/master/docs/previews/hq2x_upscale_sprite.png" width="96" style="image-rendering: pixelated;">       |
+| `hq3x`<br>[hq3x](https://en.wikipedia.org/wiki/Hqx_(algorithm))<br>(Maxim Stepin, 2003)                                                    | <img src="https://raw.githubusercontent.com/Luke100000/scalerack/master/docs/previews/hq3x_upscale_photo.png" width="160">       | <img src="https://raw.githubusercontent.com/Luke100000/scalerack/master/docs/previews/hq3x_upscale_sprite.png" width="144" style="image-rendering: pixelated;">      |
+| `hq4x`<br>[hq4x](https://en.wikipedia.org/wiki/Hqx_(algorithm))<br>(Maxim Stepin, 2003)                                                    | <img src="https://raw.githubusercontent.com/Luke100000/scalerack/master/docs/previews/hq4x_upscale_photo.png" width="160">       | <img src="https://raw.githubusercontent.com/Luke100000/scalerack/master/docs/previews/hq4x_upscale_sprite.png" width="192" style="image-rendering: pixelated;">      |
+| `xbrz` (2x-6x)<br>[xBRZ](https://sourceforge.net/projects/xbrz/)<br>(Zenju)                                                                | <img src="https://raw.githubusercontent.com/Luke100000/scalerack/master/docs/previews/xbrz_upscale_photo.png" width="160">       | <img src="https://raw.githubusercontent.com/Luke100000/scalerack/master/docs/previews/xbrz_upscale_sprite.png" width="192" style="image-rendering: pixelated;">      |
+| `superxbr`<br>[Super xBR](https://en.wikipedia.org/wiki/Pixel-art_scaling_algorithms#xBR_family)<br>(Hyllian, 2015; MIT reference port)    | <img src="https://raw.githubusercontent.com/Luke100000/scalerack/master/docs/previews/superxbr_upscale_photo.png" width="160">   | <img src="https://raw.githubusercontent.com/Luke100000/scalerack/master/docs/previews/superxbr_upscale_sprite.png" width="96" style="image-rendering: pixelated;">   |
 
 ### Vectorizing scalers
 
@@ -121,16 +126,13 @@ Rabich's [Münster market](https://commons.wikimedia.org/wiki/File:M%C3%BCnster,
 
 ## Roadmap
 
-| Algorithm                                | Family    |
-|------------------------------------------|-----------|
-| hq2x / hq3x / hq4x                       | pixel-art |
-| xBRZ (2x-6x)                             | pixel-art |
-| super-xBR                                | pixel-art |
-| EASU / RCAS (FSR 1 core, CPU)            | extended  |
-| EWA / Jinc (elliptical weighted average) | extended  |
-| Gamma-correct (linear-light) resampling  | extended  |
-| Perceptual / spectral downscaling        | research  |
-| SABR (legacy retro)                      | contrib   |
+| Algorithm                                | Family   |
+|------------------------------------------|----------|
+| EASU / RCAS (FSR 1 core, CPU)            | extended |
+| EWA / Jinc (elliptical weighted average) | extended |
+| Gamma-correct (linear-light) resampling  | extended |
+| Perceptual / spectral downscaling        | research |
+| SABR (legacy retro)                      | contrib  |
 
 Machine-learning upscalers are out of scope.
 

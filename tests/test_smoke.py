@@ -12,12 +12,17 @@ SMOKE_FACTORS = {
     "depixelize": 4.0,
     "eagle2x": 2.0,
     "eagle3x": 3.0,
+    "hq2x": 2.0,
+    "hq3x": 3.0,
+    "hq4x": 4.0,
     "sai2x": 2.0,
     "scale2x": 2.0,
     "scale3x": 3.0,
     "scale4x": 4.0,
     "super2xsai": 2.0,
     "supereagle": 2.0,
+    "superxbr": 2.0,
+    "xbrz": 3.0,
 }
 
 

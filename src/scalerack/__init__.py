@@ -10,12 +10,15 @@ from scalerack.algorithms.content_adaptive_downscale import content_adaptive_dow
 from scalerack.algorithms.depixelize import depixelize
 from scalerack.algorithms.eagle import eagle2x, eagle3x
 from scalerack.algorithms.epx import scale2x, scale3x, scale4x
+from scalerack.algorithms.hqx import hq2x, hq3x, hq4x
 from scalerack.algorithms.lanczos import lanczos
 from scalerack.algorithms.magic_kernel_sharp import magic_kernel_sharp
 from scalerack.algorithms.mitchell import mitchell
 from scalerack.algorithms.nearest import nearest
 from scalerack.algorithms.registry import ALGORITHMS
 from scalerack.algorithms.sai import sai2x, super2xsai, supereagle
+from scalerack.algorithms.superxbr import superxbr
+from scalerack.algorithms.xbrz import xbrz
 from scalerack.exceptions import (
     InvalidFactorError,
     ScalerackError,
@@ -41,6 +44,9 @@ __all__ = [
     "depixelize",
     "eagle2x",
     "eagle3x",
+    "hq2x",
+    "hq3x",
+    "hq4x",
     "lanczos",
     "magic_kernel_sharp",
     "mitchell",
@@ -52,6 +58,8 @@ __all__ = [
     "scale4x",
     "super2xsai",
     "supereagle",
+    "superxbr",
+    "xbrz",
 ]
 
 try:

@@ -3,11 +3,10 @@ from collections.abc import Callable
 import numpy as np
 
 from scalerack.algorithms.registry import register
-from scalerack.common.neighborhoods import pixels_equal
+from scalerack.common.neighborhoods import PlaneFunction, extract_planes, pixels_equal
 from scalerack.image_io import ImageInput, as_image_input
 
 CaseTable = list[tuple[np.ndarray, np.ndarray]]
-PlaneFunction = Callable[[int, int], np.ndarray]
 ExpandFunction = Callable[[np.ndarray], np.ndarray]
 
 
@@ -346,20 +345,6 @@ def expand_supereagle(values: np.ndarray) -> np.ndarray:
     )
 
     return assemble(top_left, top_right, bottom_left, bottom_right)
-
-
-def extract_planes(values: np.ndarray) -> PlaneFunction:
-    """Return an accessor for the padded neighborhood, offset in (row, column)."""
-    height, width = values.shape[:2]
-    padded = np.pad(values, ((2, 2), (2, 2), (0, 0)), mode="edge")
-
-    def plane(row_offset: int, column_offset: int) -> np.ndarray:
-        return padded[
-            2 + row_offset : 2 + row_offset + height,
-            2 + column_offset : 2 + column_offset + width,
-        ]
-
-    return plane
 
 
 def diagonal_votes(plane: PlaneFunction) -> np.ndarray:
