@@ -11,19 +11,19 @@ from scalerack.common.neighborhoods import (
 from scalerack.image_io import ImageInput
 
 
-@register
+@register(factor=2)
 def scale2x(image: ImageInput) -> ImageInput:
     """Enlarge pixel art exactly 2x with the Scale2x (EPX) neighborhood rules."""
     return run_expansion(image, expand_scale2x)
 
 
-@register
+@register(factor=3)
 def scale3x(image: ImageInput) -> ImageInput:
     """Enlarge pixel art exactly 3x with the Scale3x neighborhood rules."""
     return run_expansion(image, expand_scale3x)
 
 
-@register
+@register(factor=4)
 def scale4x(image: ImageInput) -> ImageInput:
     """Enlarge pixel art exactly 4x by applying Scale2x twice."""
     return run_expansion(image, expand_scale4x)

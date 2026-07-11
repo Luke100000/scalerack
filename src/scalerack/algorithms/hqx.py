@@ -52,19 +52,19 @@ INTERPOLATION_WEIGHTS = {
 }
 
 
-@register
+@register(factor=2)
 def hq2x(image: ImageInput) -> ImageInput:
     """Enlarge pixel art exactly 2x with Maxim Stepin's hq2x pattern interpolation."""
     return run_hqx(image, 2, HQ2X_SPECS, HQ2X_INDEX)
 
 
-@register
+@register(factor=3)
 def hq3x(image: ImageInput) -> ImageInput:
     """Enlarge pixel art exactly 3x with Maxim Stepin's hq3x pattern interpolation."""
     return run_hqx(image, 3, HQ3X_SPECS, HQ3X_INDEX)
 
 
-@register
+@register(factor=4)
 def hq4x(image: ImageInput) -> ImageInput:
     """Enlarge pixel art exactly 4x with Maxim Stepin's hq4x pattern interpolation."""
     return run_hqx(image, 4, HQ4X_SPECS, HQ4X_INDEX)

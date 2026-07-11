@@ -11,13 +11,13 @@ from scalerack.common.neighborhoods import (
 from scalerack.image_io import ImageInput
 
 
-@register
+@register(factor=2)
 def eagle2x(image: ImageInput) -> ImageInput:
     """Enlarge pixel art exactly 2x with the classic Eagle corner-rounding rules."""
     return run_expansion(image, expand_eagle2x)
 
 
-@register
+@register(factor=3)
 def eagle3x(image: ImageInput) -> ImageInput:
     """Enlarge pixel art exactly 3x with the community Eagle3x extension of the Eagle rules."""
     return run_expansion(image, expand_eagle3x)

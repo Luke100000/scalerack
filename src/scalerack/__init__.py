@@ -1,6 +1,6 @@
 import inspect
 from importlib import metadata
-from typing import TypeVar
+from typing import TypeVar, cast
 
 from scalerack.algorithms.bicubic import bicubic
 from scalerack.algorithms.bilinear import bilinear
@@ -15,7 +15,7 @@ from scalerack.algorithms.lanczos import lanczos
 from scalerack.algorithms.magic_kernel_sharp import magic_kernel_sharp
 from scalerack.algorithms.mitchell import mitchell
 from scalerack.algorithms.nearest import nearest
-from scalerack.algorithms.registry import ALGORITHMS
+from scalerack.algorithms.registry import ALGORITHMS, Algorithm
 from scalerack.algorithms.sai import sai2x, super2xsai, supereagle
 from scalerack.algorithms.superxbr import superxbr
 from scalerack.algorithms.xbrz import xbrz
@@ -30,6 +30,7 @@ from scalerack.validation import derive_factor, resolve_output_size
 
 __all__ = [
     "ALGORITHMS",
+    "Algorithm",
     "ImageInput",
     "InvalidFactorError",
     "ScalerackError",
@@ -95,21 +96,23 @@ def resize(
         )
 
     image_input = as_image_input(image)
-    function = ALGORITHMS[method]
+    function = ALGORITHMS[method].function
     parameters = inspect.signature(function).parameters
     accepts_factor = "factor" in parameters
     accepts_dimensions = "width" in parameters and "height" in parameters
 
     if accepts_factor and accepts_dimensions:
-        return function(image_input, factor=factor, width=width, height=height, **opts).raw
+        return cast(
+            ImageT, function(image_input, factor=factor, width=width, height=height, **opts).raw
+        )
 
     if accepts_factor:
         if width is not None or height is not None:
             array = image_input.numpy()
             factor = derive_factor(array.shape[0], array.shape[1], width, height)
         if factor is None:
-            return function(image_input, **opts).raw
-        return function(image_input, factor=factor, **opts).raw
+            return cast(ImageT, function(image_input, **opts).raw)
+        return cast(ImageT, function(image_input, factor=factor, **opts).raw)
 
     if accepts_dimensions:
         if factor is not None:
@@ -118,6 +121,6 @@ def resize(
                 array.shape[0], array.shape[1], factor, width, height
             )
             width, height = output_width, output_height
-        return function(image_input, width=width, height=height, **opts).raw
+        return cast(ImageT, function(image_input, width=width, height=height, **opts).raw)
 
-    return function(image_input, **opts).raw
+    return cast(ImageT, function(image_input, **opts).raw)

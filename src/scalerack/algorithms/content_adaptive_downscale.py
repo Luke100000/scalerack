@@ -175,7 +175,7 @@ def _edge_orientation_vector(
     )
 
 
-@register
+@register(slow=True)
 def content_adaptive_downscale(
     image: ImageInput,
     factor: float | None = None,

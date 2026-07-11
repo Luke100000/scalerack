@@ -182,7 +182,7 @@ CORNER = {
 }
 
 
-@register
+@register()
 def xbrz(image: ImageInput, factor: int = 2) -> ImageInput:
     """Enlarge pixel art 2x-6x with Zenju's xBRZ edge-slope detection and blending.
 

@@ -10,19 +10,19 @@ CaseTable = list[tuple[np.ndarray, np.ndarray]]
 ExpandFunction = Callable[[np.ndarray], np.ndarray]
 
 
-@register
+@register(factor=2)
 def sai2x(image: ImageInput) -> ImageInput:
     """Enlarge pixel art exactly 2x with Kreed's 2xSaI edge-aware interpolation."""
     return run_sai(image, expand_sai2x)
 
 
-@register
+@register(factor=2)
 def super2xsai(image: ImageInput) -> ImageInput:
     """Enlarge pixel art exactly 2x with Kreed's Super 2xSaI, the family's strongest blur."""
     return run_sai(image, expand_super2xsai)
 
 
-@register
+@register(factor=2)
 def supereagle(image: ImageInput) -> ImageInput:
     """Enlarge pixel art exactly 2x with Kreed's SuperEagle edge detection and blending."""
     return run_sai(image, expand_supereagle)

@@ -4,7 +4,7 @@ from scalerack.algorithms.registry import register
 from scalerack.image_io import ImageInput, as_image_input
 
 
-@register
+@register()
 def nearest(
     image: ImageInput,
     factor: float | None = None,

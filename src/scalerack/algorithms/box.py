@@ -5,7 +5,7 @@ from scalerack.common.resample import filter_axis, normalize_rows, run_pipeline
 from scalerack.image_io import ImageInput
 
 
-@register
+@register()
 def box(
     image: ImageInput,
     factor: float | None = None,

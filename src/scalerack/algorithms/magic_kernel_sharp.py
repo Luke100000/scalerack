@@ -4,7 +4,7 @@ from scalerack.common.resample import resample_with_kernel
 from scalerack.image_io import ImageInput
 
 
-@register
+@register()
 def magic_kernel_sharp(
     image: ImageInput,
     factor: float | None = None,

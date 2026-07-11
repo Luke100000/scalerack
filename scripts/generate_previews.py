@@ -1,4 +1,3 @@
-import inspect
 from dataclasses import dataclass
 from os import cpu_count
 from pathlib import Path
@@ -19,9 +18,6 @@ DOWNSCALE_FACTOR = 0.25
 UPSCALE_FACTOR = 4
 RECONSTRUCTION_DOWNSCALER = "lanczos"
 MAX_UNCHANGED_CHANNEL_DIFFERENCE = 1
-
-# Regenerated only when missing, unless --slow is passed.
-SLOW_ALGORITHMS = frozenset({"content_adaptive_downscale"})
 
 
 @dataclass(frozen=True)
@@ -51,18 +47,13 @@ class PreviewJob:
     task: PreviewTask
 
 
-def accepts_factor(name: str) -> bool:
-    parameters = inspect.signature(scalerack.ALGORITHMS[name]).parameters
-    return "factor" in parameters
-
-
-def open_sample(task: PreviewTask) -> Image.Image:
+def open_sample(task: PreviewTask, *, alpha: bool) -> Image.Image:
     with Image.open(task.path) as image:
-        return image.convert("RGBA")
+        return image.convert("RGBA" if alpha else "RGB")
 
 
-def prepare_input(task: PreviewTask) -> Image.Image:
-    source = open_sample(task)
+def prepare_input(task: PreviewTask, *, alpha: bool) -> Image.Image:
+    source = open_sample(task, alpha=alpha)
     if task.reconstruct_from_downscale:
         return scalerack.resize(RECONSTRUCTION_DOWNSCALER, source, DOWNSCALE_FACTOR)
     return source
@@ -103,8 +94,12 @@ def preview_output_path(prefix: str, direction: str, sample_name: str) -> Path:
     return PREVIEWS_DIRECTORY / f"{prefix}_{direction}_{sample_name}.png"
 
 
+def preview_factor(name: str, task: PreviewTask) -> float:
+    return scalerack.ALGORITHMS[name].factor or task.factor
+
+
 def expected_output_path(name: str, task: PreviewTask) -> Path:
-    direction = "downscale" if task.factor < 1 else "upscale"
+    direction = "downscale" if preview_factor(name, task) < 1 else "upscale"
     return PREVIEWS_DIRECTORY / f"{name}_{direction}_{task.name}.png"
 
 
@@ -112,15 +107,12 @@ def build_jobs(include_slow: bool) -> tuple[list[PreviewJob], int]:
     jobs: list[PreviewJob] = []
     skipped_slow = 0
     for name in scalerack.ALGORITHMS:
-        has_factor = accepts_factor(name)
+        algorithm = scalerack.ALGORITHMS[name]
         for task in PREVIEW_TASKS:
-            if not has_factor and task.factor < 1:
+            factor = preview_factor(name, task)
+            if algorithm.factor is not None and (factor < 1) != (task.factor < 1):
                 continue
-            if (
-                name in SLOW_ALGORITHMS
-                and not include_slow
-                and expected_output_path(name, task).exists()
-            ):
+            if algorithm.slow and not include_slow and expected_output_path(name, task).exists():
                 skipped_slow += 1
                 continue
             jobs.append(PreviewJob(name, task))
@@ -128,15 +120,11 @@ def build_jobs(include_slow: bool) -> tuple[list[PreviewJob], int]:
 
 
 def render_preview(job: PreviewJob) -> str | None:
-    has_factor = accepts_factor(job.algorithm)
-    source = prepare_input(job.task)
+    algorithm = scalerack.ALGORITHMS[job.algorithm]
+    source = prepare_input(job.task, alpha=algorithm.alpha)
     # noinspection PyBroadException
     try:
-        result = (
-            scalerack.resize(job.algorithm, source, job.task.factor)
-            if has_factor
-            else scalerack.resize(job.algorithm, source)
-        )
+        result = scalerack.resize(job.algorithm, source, preview_factor(job.algorithm, job.task))
     except Exception:
         return None
     direction = classify_resize(source, result)

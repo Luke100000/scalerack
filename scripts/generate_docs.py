@@ -142,7 +142,8 @@ def render_callable(name: str, function: object) -> str:
 
 def render_algorithms() -> str:
     return "\n\n".join(
-        render_callable(name, scalerack.ALGORITHMS[name]) for name in sorted(scalerack.ALGORITHMS)
+        render_callable(name, scalerack.ALGORITHMS[name].function)
+        for name in sorted(scalerack.ALGORITHMS)
     )
 
 

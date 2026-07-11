@@ -49,8 +49,8 @@ def scale(
 @app.command(name="list")
 def list_algorithms() -> None:
     """List every algorithm with its one-line summary."""
-    for name, function in sorted(scalerack.ALGORITHMS.items()):
-        summary = (function.__doc__ or "").strip().splitlines()[0]
+    for name, algorithm in sorted(scalerack.ALGORITHMS.items()):
+        summary = (algorithm.function.__doc__ or "").strip().splitlines()[0]
         print(f"{name:<20} {summary}")
 
 

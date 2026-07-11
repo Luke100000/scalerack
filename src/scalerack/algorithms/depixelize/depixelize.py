@@ -12,7 +12,7 @@ from scalerack.algorithms.registry import register
 from scalerack.image_io import ImageInput, as_image_input
 
 
-@register
+@register()
 def depixelize(
     image: ImageInput,
     factor: float | None = None,

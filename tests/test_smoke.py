@@ -9,19 +9,6 @@ from scalerack.image_io import ImageInput
 CLASSICAL_SMOKE_FACTOR = 1.7
 SMOKE_FACTORS = {
     "content_adaptive_downscale": 0.5,
-    "depixelize": 4.0,
-    "eagle2x": 2.0,
-    "eagle3x": 3.0,
-    "hq2x": 2.0,
-    "hq3x": 3.0,
-    "hq4x": 4.0,
-    "sai2x": 2.0,
-    "scale2x": 2.0,
-    "scale3x": 3.0,
-    "scale4x": 4.0,
-    "super2xsai": 2.0,
-    "supereagle": 2.0,
-    "superxbr": 2.0,
     "xbrz": 3.0,
 }
 
@@ -34,7 +21,9 @@ class TestScalerSmoke:
         self, name: str, complex_image: np.ndarray
     ) -> None:
         """Each algorithm returns a same-dtype ndarray of the expected size."""
-        factor = SMOKE_FACTORS.get(name, CLASSICAL_SMOKE_FACTOR)
+        factor = SMOKE_FACTORS.get(
+            name, scalerack.ALGORITHMS[name].factor or CLASSICAL_SMOKE_FACTOR
+        )
         result = scalerack.resize(name, complex_image, factor)
         assert isinstance(result, np.ndarray)
         assert result.dtype == complex_image.dtype

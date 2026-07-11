@@ -30,7 +30,7 @@ CENTRAL_CELLS = ((1, 1), (2, 1), (1, 2), (2, 2))
 Window = dict[tuple[int, int], np.ndarray]
 
 
-@register
+@register(factor=2)
 def superxbr(image: ImageInput) -> ImageInput:
     """Enlarge pixel art exactly 2x with Hyllian's Super xBR hybrid interpolation."""
     image_input = as_image_input(image)
