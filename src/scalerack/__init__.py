@@ -1,6 +1,6 @@
 import inspect
 from importlib import metadata
-from typing import TypeVar, cast
+from typing import TypeVar
 
 from scalerack.algorithms.bicubic import bicubic
 from scalerack.algorithms.bilinear import bilinear
@@ -99,32 +99,29 @@ def resize(
             f"unknown algorithm '{method}'; available algorithms: {sorted(ALGORITHMS)}"
         )
 
-    image_input = as_image_input(image)
     function = ALGORITHMS[method].function
     parameters = inspect.signature(function).parameters
     accepts_factor = "factor" in parameters
     accepts_dimensions = "width" in parameters and "height" in parameters
 
     if accepts_factor and accepts_dimensions:
-        return cast(
-            ImageT, function(image_input, factor=factor, width=width, height=height, **opts).raw
-        )
+        return function(image, factor=factor, width=width, height=height, **opts)
 
     if accepts_factor:
         if width is not None or height is not None:
-            array = image_input.numpy()
+            array = as_image_input(image).numpy()
             factor = derive_factor(array.shape[0], array.shape[1], width, height)
         if factor is None:
-            return cast(ImageT, function(image_input, **opts).raw)
-        return cast(ImageT, function(image_input, factor=factor, **opts).raw)
+            return function(image, **opts)
+        return function(image, factor=factor, **opts)
 
     if accepts_dimensions:
         if factor is not None:
-            array = image_input.numpy()
+            array = as_image_input(image).numpy()
             output_height, output_width = resolve_output_size(
                 array.shape[0], array.shape[1], factor, width, height
             )
             width, height = output_width, output_height
-        return cast(ImageT, function(image_input, width=width, height=height, **opts).raw)
+        return function(image, width=width, height=height, **opts)
 
-    return cast(ImageT, function(image_input, **opts).raw)
+    return function(image, **opts)

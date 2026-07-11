@@ -4,7 +4,6 @@ import numpy as np
 import pytest
 
 import scalerack
-from scalerack.image_io import ImageInput
 
 CLASSICAL_SMOKE_FACTOR = 1.7
 SMOKE_FACTORS = {
@@ -40,10 +39,9 @@ class TestScalerSmoke:
 
         source = Image.fromarray(complex_image)
         result = scalerack.lanczos(source, factor=2)
-        assert isinstance(result, ImageInput)
-        assert isinstance(result.raw, Image.Image)
-        assert result.raw.mode == source.mode
-        assert result.raw.size == (source.width * 2, source.height * 2)
+        assert isinstance(result, Image.Image)
+        assert result.mode == source.mode
+        assert result.size == (source.width * 2, source.height * 2)
 
 
 class TestCliSmoke:
