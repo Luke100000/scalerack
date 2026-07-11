@@ -25,6 +25,13 @@ pip install scalerack[cli]     # command line interface
 pip install scalerack[all]     # everything
 ```
 
+### Install with uv
+
+```bash
+uv tool install "scalerack[cli]"              # install the CLI as a user tool
+uvx --from "scalerack[cli]" scalerack list    # run once without installing
+```
+
 ## Usage
 
 ```python
@@ -84,6 +91,8 @@ Downscaling algorithm usually focus on preserving detail.
 | Algorithm                                                                                                                                                           | Photo downscale                                                                                                                                    | Sprite downscale                                                                                                                                                                        |
 |---------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `content_adaptive_downscale`<br>[Content-Adaptive Image Downscaling](https://johanneskopf.de/publications/downscaling/)<br>(Does not fully reproduce paper results) | <img src="https://raw.githubusercontent.com/Luke100000/scalerack/master/docs/previews/content_adaptive_downscale_downscale_photo.png" width="160"> | <img src="https://raw.githubusercontent.com/Luke100000/scalerack/master/docs/previews/content_adaptive_downscale_downscale_sprite.png" width="192" style="image-rendering: pixelated;"> |
+| `channel_median`                                                                                                                                                    | <img src="https://raw.githubusercontent.com/Luke100000/scalerack/master/docs/previews/channel_median_downscale_photo.png" width="160">             | <img src="https://raw.githubusercontent.com/Luke100000/scalerack/master/docs/previews/channel_median_downscale_sprite.png" width="192" style="image-rendering: pixelated;">             |
+| `vector_median`                                                                                                                                                     | <img src="https://raw.githubusercontent.com/Luke100000/scalerack/master/docs/previews/vector_median_downscale_photo.png" width="160">              | <img src="https://raw.githubusercontent.com/Luke100000/scalerack/master/docs/previews/vector_median_downscale_sprite.png" width="192" style="image-rendering: pixelated;">              |
 
 ### Pixel-art scalers
 

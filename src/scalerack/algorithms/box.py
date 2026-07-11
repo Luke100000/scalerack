@@ -35,7 +35,9 @@ def build_coverage_weights(input_size: int, output_size: int) -> tuple[np.ndarra
     left_edges = np.arange(output_size) / scale
     right_edges = (np.arange(output_size) + 1) / scale
     first = np.floor(left_edges).astype(np.int64)
-    tap_count = int(np.ceil(1.0 / scale)) + 1
+    footprint = 1.0 / scale
+    edges_align = input_size % output_size == 0 or output_size % input_size == 0
+    tap_count = int(np.ceil(footprint)) + (not edges_align)
     positions = first[:, None] + np.arange(tap_count)[None, :]
     coverage = np.minimum(right_edges[:, None], positions + 1) - np.maximum(
         left_edges[:, None], positions

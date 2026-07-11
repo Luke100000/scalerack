@@ -6,6 +6,7 @@ from scalerack.algorithms.bicubic import bicubic
 from scalerack.algorithms.bilinear import bilinear
 from scalerack.algorithms.box import box
 from scalerack.algorithms.catmull_rom import catmull_rom
+from scalerack.algorithms.channel_median import channel_median
 from scalerack.algorithms.content_adaptive_downscale import content_adaptive_downscale
 from scalerack.algorithms.depixelize import depixelize
 from scalerack.algorithms.eagle import eagle2x, eagle3x
@@ -18,6 +19,7 @@ from scalerack.algorithms.nearest import nearest
 from scalerack.algorithms.registry import ALGORITHMS, Algorithm
 from scalerack.algorithms.sai import sai2x, super2xsai, supereagle
 from scalerack.algorithms.superxbr import superxbr
+from scalerack.algorithms.vector_median import vector_median
 from scalerack.algorithms.xbrz import xbrz
 from scalerack.exceptions import (
     InvalidFactorError,
@@ -41,6 +43,7 @@ __all__ = [
     "bilinear",
     "box",
     "catmull_rom",
+    "channel_median",
     "content_adaptive_downscale",
     "depixelize",
     "eagle2x",
@@ -60,6 +63,7 @@ __all__ = [
     "super2xsai",
     "supereagle",
     "superxbr",
+    "vector_median",
     "xbrz",
 ]
 

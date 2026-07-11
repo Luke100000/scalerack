@@ -8,7 +8,9 @@ from scalerack.image_io import ImageInput
 
 CLASSICAL_SMOKE_FACTOR = 1.7
 SMOKE_FACTORS = {
+    "channel_median": 0.5,
     "content_adaptive_downscale": 0.5,
+    "vector_median": 0.5,
     "xbrz": 3.0,
 }
 
