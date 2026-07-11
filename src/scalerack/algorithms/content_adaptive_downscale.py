@@ -13,7 +13,7 @@ class ColorModule(Protocol):
     def lab2rgb(self, lab: np.ndarray) -> np.ndarray: ...
 
 
-def _skimage_color() -> ColorModule:
+def skimage_color() -> ColorModule:
     try:
         from skimage import color
     except ImportError as exc:
@@ -23,8 +23,8 @@ def _skimage_color() -> ColorModule:
     return color
 
 
-def _rgb_to_lab01(rgb: np.ndarray) -> np.ndarray:
-    lab = _skimage_color().rgb2lab(np.clip(rgb, 0.0, 1.0))
+def rgb_to_lab01(rgb: np.ndarray) -> np.ndarray:
+    lab = skimage_color().rgb2lab(np.clip(rgb, 0.0, 1.0))
     out = np.empty_like(lab, dtype=np.float64)
     out[..., 0] = lab[..., 0] / 100.0
     out[..., 1] = (lab[..., 1] + 128.0) / 255.0
@@ -32,15 +32,15 @@ def _rgb_to_lab01(rgb: np.ndarray) -> np.ndarray:
     return out
 
 
-def _lab01_to_rgb(lab01: np.ndarray) -> np.ndarray:
+def lab01_to_rgb(lab01: np.ndarray) -> np.ndarray:
     lab = np.empty_like(lab01, dtype=np.float64)
     lab[..., 0] = lab01[..., 0] * 100.0
     lab[..., 1] = lab01[..., 1] * 255.0 - 128.0
     lab[..., 2] = lab01[..., 2] * 255.0 - 128.0
-    return np.clip(_skimage_color().lab2rgb(lab), 0.0, 1.0)
+    return np.clip(skimage_color().lab2rgb(lab), 0.0, 1.0)
 
 
-def _resize_alpha(alpha: np.ndarray, wo: int, ho: int) -> np.ndarray:
+def resize_alpha(alpha: np.ndarray, wo: int, ho: int) -> np.ndarray:
     hi, wi = alpha.shape
 
     xs = (np.arange(wo) + 0.5) * wi / wo - 0.5
@@ -70,7 +70,7 @@ def _resize_alpha(alpha: np.ndarray, wo: int, ho: int) -> np.ndarray:
     return top * (1.0 - wy)[:, None] + bot * wy[:, None]
 
 
-def _angle_degrees(a: np.ndarray, b: np.ndarray) -> float:
+def angle_degrees(a: np.ndarray, b: np.ndarray) -> float:
     na = float(np.linalg.norm(a))
     nb = float(np.linalg.norm(b))
 
@@ -81,7 +81,7 @@ def _angle_degrees(a: np.ndarray, b: np.ndarray) -> float:
     return math.degrees(math.acos(float(np.clip(c, -1.0, 1.0))))
 
 
-def _neighbors4(k: int, wo: int, ho: int) -> list[int]:
+def neighbors4(k: int, wo: int, ho: int) -> list[int]:
     x = k % wo
     y = k // wo
     out: list[int] = []
@@ -98,7 +98,7 @@ def _neighbors4(k: int, wo: int, ho: int) -> list[int]:
     return out
 
 
-def _neighbors8(k: int, wo: int, ho: int) -> list[int]:
+def neighbors8(k: int, wo: int, ho: int) -> list[int]:
     x = k % wo
     y = k // wo
     out: list[int] = []
@@ -117,7 +117,7 @@ def _neighbors8(k: int, wo: int, ho: int) -> list[int]:
     return out
 
 
-def _edge_orientation_vector(
+def edge_orientation_vector(
     k: int,
     n: int,
     *,
@@ -238,7 +238,7 @@ def content_adaptive_downscale(
         # pseudocode's plain 0.08 self-limits.
         edge_strength_threshold = 0.08
 
-    lab = _rgb_to_lab01(rgb)
+    lab = rgb_to_lab01(rgb)
     colors = lab.reshape(-1, 3)
 
     yy, xx = np.indices((hi, wi), dtype=np.float64)
@@ -299,8 +299,8 @@ def content_adaptive_downscale(
             w /= max(float(w.sum()), eps)
             nu[k] = w @ support_col[k]
 
-    nbr4 = [_neighbors4(k, wo, ho) for k in range(k_count)]
-    nbr8 = [_neighbors8(k, wo, ho) for k in range(k_count)]
+    nbr4 = [neighbors4(k, wo, ho) for k in range(k_count)]
+    nbr8 = [neighbors8(k, wo, ho) for k in range(k_count)]
 
     # Supports are static, so per-pair overlaps are precomputed once.
     overlap: dict[tuple[int, int], tuple[np.ndarray, np.ndarray]] = {}
@@ -452,7 +452,7 @@ def content_adaptive_downscale(
                         f = float(np.dot(gamma[k][ia], gamma[n][ib])) if ia.size else 0.0
 
                         if f < edge_strength_threshold:
-                            o = _edge_orientation_vector(
+                            o = edge_orientation_vector(
                                 k,
                                 n,
                                 supports=supports,
@@ -464,7 +464,7 @@ def content_adaptive_downscale(
                                 eps=eps,
                             )
 
-                            if _angle_degrees(direction, o) > 25.0:
+                            if angle_degrees(direction, o) > 25.0:
                                 trigger = True
 
                     if trigger:
@@ -479,6 +479,6 @@ def content_adaptive_downscale(
         if nu_delta < tol and not constraints_triggered:
             break
 
-    out_rgb = _lab01_to_rgb(nu.reshape(ho, wo, 3))
-    out_alpha = _resize_alpha(alpha, wo, ho)
+    out_rgb = lab01_to_rgb(nu.reshape(ho, wo, 3))
+    out_alpha = resize_alpha(alpha, wo, ho)
     return image_input.from_numpy(np.dstack([out_rgb, out_alpha]))

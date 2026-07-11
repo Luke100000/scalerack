@@ -22,7 +22,7 @@ def is_pil_image(image: object) -> bool:
     return isinstance(image, pil_image_module.Image)
 
 
-def _match_original_shape_and_dtype(result: np.ndarray, original: np.ndarray) -> np.ndarray:
+def match_original_shape_and_dtype(result: np.ndarray, original: np.ndarray) -> np.ndarray:
     values = np.ascontiguousarray(result)
     if values.ndim == 3 and values.shape[2] == 4 and original.ndim == 2:
         values = values[:, :, :3].mean(axis=2)
@@ -91,8 +91,8 @@ class ImageInput:
         if array.size == 0:
             raise UnsupportedImageError("result image has zero pixels")
 
-        restored = _match_original_shape_and_dtype(array, original)
-        self.raw = _from_array(restored, self.raw)
+        restored = match_original_shape_and_dtype(array, original)
+        self.raw = from_array(restored, self.raw)
         return self
 
     def get_target_dimensions(
@@ -151,7 +151,7 @@ def validate_array(image: np.ndarray) -> np.ndarray:
     return np.ascontiguousarray(image)
 
 
-def _from_array(result: np.ndarray, original: object) -> object:
+def from_array(result: np.ndarray, original: object) -> object:
     if is_pil_image(original):
         from PIL import Image as Image
 
