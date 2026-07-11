@@ -2,6 +2,10 @@
 
 Notable Scalerack changes.
 
+## 0.3.1 - 11.07.2026
+
+* Better API, all resamplers now support any input.
+
 ## 0.3.0 - 11.07.2026
 
 * Added median filters.
