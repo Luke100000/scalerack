@@ -2,7 +2,7 @@
 
 Notable Scalerack changes.
 
-## 0.3.0
+## 0.3.0 - 11.07.2026
 
 * Added median filters.
 

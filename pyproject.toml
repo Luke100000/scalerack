@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "scalerack"
-version = "0.2.0"
+version = "0.3.0"
 description = "Python image resizing, resampling, downscaling, and pixel-art upscaling library and CLI."
 readme = "README.md"
 license = "MPL-2.0"
