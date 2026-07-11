@@ -18,6 +18,7 @@ PREVIEWS_DIRECTORY = DOCS_DIRECTORY / "previews"
 DOWNSCALE_FACTOR = 0.25
 UPSCALE_FACTOR = 4
 RECONSTRUCTION_DOWNSCALER = "lanczos"
+MAX_UNCHANGED_CHANNEL_DIFFERENCE = 1
 
 # Regenerated only when missing, unless --slow is passed.
 SLOW_ALGORITHMS = frozenset({"content_adaptive_downscale"})
@@ -36,12 +37,18 @@ PREVIEW_TASKS = (
     PreviewTask("sprite", SAMPLES_DIRECTORY / "sprite_downscale.png", DOWNSCALE_FACTOR),
     PreviewTask(
         "photo",
-        SAMPLES_DIRECTORY / "photo_upscale.jpg",
+        SAMPLES_DIRECTORY / "photo_upscale.png",
         UPSCALE_FACTOR,
         reconstruct_from_downscale=True,
     ),
     PreviewTask("sprite", SAMPLES_DIRECTORY / "sprite_upscale.png", UPSCALE_FACTOR),
 )
+
+
+@dataclass(frozen=True)
+class PreviewJob:
+    algorithm: str
+    task: PreviewTask
 
 
 def accepts_factor(name: str) -> bool:
@@ -71,9 +78,6 @@ def classify_resize(source: Image.Image, result: Image.Image) -> str | None:
     return None
 
 
-MAX_UNCHANGED_CHANNEL_DIFFERENCE = 1
-
-
 def differs_from_existing(image: Image.Image, path: Path) -> bool:
     if not path.exists():
         return True
@@ -96,14 +100,7 @@ def save_preview(image: Image.Image, path: Path) -> str:
 
 
 def preview_output_path(prefix: str, direction: str, sample_name: str) -> Path:
-    extension = ".jpg" if direction == "upscale" and sample_name == "photo" else ".png"
-    return PREVIEWS_DIRECTORY / f"{prefix}_{direction}_{sample_name}{extension}"
-
-
-@dataclass(frozen=True)
-class PreviewJob:
-    algorithm: str
-    task: PreviewTask
+    return PREVIEWS_DIRECTORY / f"{prefix}_{direction}_{sample_name}.png"
 
 
 def expected_output_path(name: str, task: PreviewTask) -> Path:
