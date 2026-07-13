@@ -11,6 +11,7 @@ from scalerack.algorithms.content_adaptive_downscale import content_adaptive_dow
 from scalerack.algorithms.depixelize import depixelize
 from scalerack.algorithms.eagle import eagle2x, eagle3x
 from scalerack.algorithms.epx import scale2x, scale3x, scale4x
+from scalerack.algorithms.fsr import fsr
 from scalerack.algorithms.hqx import hq2x, hq3x, hq4x
 from scalerack.algorithms.lanczos import lanczos
 from scalerack.algorithms.magic_kernel_sharp import magic_kernel_sharp
@@ -48,6 +49,7 @@ __all__ = [
     "depixelize",
     "eagle2x",
     "eagle3x",
+    "fsr",
     "hq2x",
     "hq3x",
     "hq4x",

@@ -94,6 +94,15 @@ Downscaling algorithm usually focus on preserving detail.
 | `channel_median`                                                                                                                                                    | <img src="https://raw.githubusercontent.com/Luke100000/scalerack/master/docs/previews/channel_median_downscale_photo.png" width="160">             | <img src="https://raw.githubusercontent.com/Luke100000/scalerack/master/docs/previews/channel_median_downscale_sprite.png" width="192" style="image-rendering: pixelated;">             |
 | `vector_median`                                                                                                                                                     | <img src="https://raw.githubusercontent.com/Luke100000/scalerack/master/docs/previews/vector_median_downscale_photo.png" width="160">              | <img src="https://raw.githubusercontent.com/Luke100000/scalerack/master/docs/previews/vector_median_downscale_sprite.png" width="192" style="image-rendering: pixelated;">              |
 
+### Upscalers
+
+Upscalers target continuous-tone content at arbitrary magnification factors.
+
+| Algorithm                                                                                                                                                       | Photo reconstruction                                                                                                      | Sprite upscale                                                                                                                                                 |
+|-------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Original                                                                                                                                                        | <img src="https://raw.githubusercontent.com/Luke100000/scalerack/master/docs/samples/photo_upscale.png" width="160">      | <img src="https://raw.githubusercontent.com/Luke100000/scalerack/master/docs/samples/sprite_upscale.png" width="48" style="image-rendering: pixelated;">       |
+| `fsr`<br>[AMD FidelityFX Super Resolution 1.0](https://gpuopen.com/fidelityfx-superresolution/)<br>(EASU + RCAS) | <img src="https://raw.githubusercontent.com/Luke100000/scalerack/master/docs/previews/fsr_upscale_photo.png" width="160"> | <img src="https://raw.githubusercontent.com/Luke100000/scalerack/master/docs/previews/fsr_upscale_sprite.png" width="192" style="image-rendering: pixelated;"> |
+
 ### Pixel-art scalers
 
 Some algorithms may output different results depending on the fixed scale factor.
@@ -139,7 +148,6 @@ via Wikimedia Commons.
 
 | Algorithm                                | Family   |
 |------------------------------------------|----------|
-| EASU / RCAS (FSR 1 core, CPU)            | extended |
 | EWA / Jinc (elliptical weighted average) | extended |
 | Gamma-correct (linear-light) resampling  | extended |
 | Perceptual / spectral downscaling        | research |

@@ -2,6 +2,10 @@
 
 Notable Scalerack changes.
 
+## Unreleased
+
+* Added AMD FSR 1 (`fsr`): EASU edge-adaptive upscaling plus RCAS sharpening
+
 ## 0.3.1 - 11.07.2026
 
 * Better API, all resamplers now support any input.
